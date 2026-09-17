@@ -10,7 +10,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android:
@@ -83,10 +83,15 @@ jobs:
       - name: Generate checksums and provenance
         run: |
           cd release
+          test -s The-Only-Android-Mobile.apk
+          test -s The-Only-Android-TV.apk
+          test -s The-Only-iOS-UNSIGNED.ipa
+          unzip -l The-Only-iOS-UNSIGNED.ipa | grep 'Payload/TheOnly.app/'
           sha256sum The-Only-Android-Mobile.apk The-Only-Android-TV.apk The-Only-iOS-UNSIGNED.ipa > SHA256SUMS
           {
             echo "THE ONLY BUILD PROVENANCE"
             echo "commit=${GITHUB_SHA}"
+            echo "version=0.1.0+1"
             echo "workflow_run=${GITHUB_RUN_ID}"
             echo "android_signing=debug signing configuration; not production signed"
             echo "ios_signing=UNSIGNED/no-codesign"
@@ -97,3 +102,19 @@ jobs:
           name: the-only-release-bundle
           path: release
           if-no-files-found: error
+
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: provenance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: the-only-release-bundle
+          path: release
+      - name: Publish complete GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v0.1.0-build.${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" release/The-Only-Android-Mobile.apk release/The-Only-Android-TV.apk release/The-Only-iOS-UNSIGNED.ipa release/SHA256SUMS release/BUILD_PROVENANCE.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "The Only 0.1.0+1" --notes "Android Mobile + Android TV + iOS UNSIGNED/no-codesign built from exact commit $GITHUB_SHA. The iOS IPA requires signing before normal device installation. Android artifacts use the repository's documented debug signing configuration, not production signing."
