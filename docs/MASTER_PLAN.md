@@ -13,14 +13,14 @@ The project is one unified application, not a wrapper around multiple applicatio
 | TO-05 | Bootstrap The Only Flutter app | DONE | TO-04 | Flutter scaffold passed CI analyze/test |
 | TO-06 | Core domain models | DONE | TO-05 | committed models/tests passed CI |
 | TO-07 | Unified navigation shell | DONE | TO-05 | six-section shell/widget tests passed CI |
-| TO-08 | Unified settings registry | IN_PROGRESS | TO-06 | shared registry wired into app shell in PR #8; durable persistence pending |
-| TO-09 | Section enable/disable controls | IN_PROGRESS | TO-08 | Settings screen wired to shared shell in PR #8; CI pending |
-| TO-10 | Cinema section | IN_PROGRESS | TO-07 | functional controller + fixture flow merged; product UI/details/player wiring pending |
+| TO-08 | Unified settings registry | IN_PROGRESS | TO-06 | shared registry wired into app shell; durable persistence pending |
+| TO-09 | Section enable/disable controls | DONE | TO-08 | Settings controls merged in PR #8 after exact-head analyze/test passed |
+| TO-10 | Cinema section | IN_PROGRESS | TO-07 | controller merged; functional search/source/favorite/Watch/Download UI + fixture test in PR #9; shell/player wiring pending |
 | TO-11 | Live TV section | IN_PROGRESS | TO-07 | channels/EPG/streams/fallback controller + fixture test merged |
 | TO-12 | Sources section | IN_PROGRESS | TO-07 | provider discovery/search/grouped-source implementation merged; product UI pending |
 | TO-13 | Resolvers section | IN_PROGRESS | TO-07 | clean-room functional resolver controller + deterministic fixture tests merged; product UI pending |
 | TO-14 | Tools/Providers section | IN_PROGRESS | TO-07 | shared registry/health/preferences controller + deterministic tests merged; product UI pending |
-| TO-15 | Sixth section feature gate | IN_PROGRESS | TO-09 | hidden by default; Settings enable/navigation widget flow in PR #8; CI pending |
+| TO-15 | Sixth section feature gate | DONE | TO-09 | hidden by default; Settings enable/navigation widget flow passed exact-head CI and merged in PR #8 |
 | TO-16 | Provider interface contract | DONE | TO-06 | contract/registry exercised by green CI |
 | TO-17 | Resolver interface contract | IN_PROGRESS | TO-06 | contract + functional controller merged; UI integration pending |
 | TO-18 | Unified stream model | DONE | TO-06 | model exercised by Cinema/Live TV green CI |
@@ -30,12 +30,12 @@ The project is one unified application, not a wrapper around multiple applicatio
 | TO-22 | HLS playback adapter | TODO | TO-21 | platform adapter + fixture test |
 | TO-23 | MP4 playback adapter | TODO | TO-21 | platform adapter + fixture test |
 | TO-24 | DASH playback adapter | TODO | TO-21 | platform adapter + fixture test |
-| TO-25 | Unified search | IN_PROGRESS | TO-16 | shared coordinator green; section/UI integration pending |
-| TO-26 | Favorites repository | IN_PROGRESS | TO-06 | memory implementation green; persistent implementation pending |
-| TO-27 | History repository | IN_PROGRESS | TO-06 | memory implementation green; persistent implementation pending |
-| TO-28 | Downloads repository/queue | IN_PROGRESS | TO-18 | memory queue green; platform download execution pending |
+| TO-25 | Unified search | IN_PROGRESS | TO-16 | shared coordinator green; Cinema UI integration in PR #9; remaining section UI integration pending |
+| TO-26 | Favorites repository | IN_PROGRESS | TO-06 | memory implementation green; Cinema UI integration in PR #9; persistent implementation pending |
+| TO-27 | History repository | IN_PROGRESS | TO-06 | memory implementation green; Cinema Watch integration in PR #9; persistent implementation pending |
+| TO-28 | Downloads repository/queue | IN_PROGRESS | TO-18 | memory queue green; explicit Cinema Download integration in PR #9; platform execution pending |
 | TO-29 | Local storage abstraction | IN_PROGRESS | TO-06 | abstraction/tests present; durable backend pending |
-| TO-30 | Cinema provider migration | IN_PROGRESS | TO-03,TO-16 | no-license source => clean-room functional path merged; deeper UI/provider behavior pending |
+| TO-30 | Cinema provider migration | IN_PROGRESS | TO-03,TO-16 | no-license source => clean-room implementation; product UI in PR #9; deeper provider behavior pending |
 | TO-31 | TMDB/source provider migration | IN_PROGRESS | TO-03,TO-16 | MIT-cleared source; The Only-owned Sources implementation merged |
 | TO-32 | IPTV/M3U/XCAPI/EPG migration | IN_PROGRESS | TO-03,TO-16 | no-license => clean-room channels/EPG/stream flow merged |
 | TO-33 | Resolver migration | IN_PROGRESS | TO-03,TO-17 | reference-only inputs; clean-room resolver controller/tests merged; UI pending |
