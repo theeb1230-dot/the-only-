@@ -65,10 +65,12 @@ void main() {
     await tester.tap(find.byKey(const Key('cinema-watch')));
     await tester.pump();
     expect(history.entries, hasLength(1));
+    expect(downloads.jobs, isEmpty, reason: 'Watch must never implicitly queue a download');
 
     await tester.tap(find.byKey(const Key('cinema-download-0')));
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
+    expect(history.entries, hasLength(1), reason: 'Download must remain independent from Watch/history');
     expect(find.text('Download queued'), findsOneWidget);
   });
 }
