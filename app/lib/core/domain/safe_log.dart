@@ -1,1 +1,10 @@
-String safeUriForLog(Uri uri) => uri.replace(query: null, fragment: null).toString();
+String safeUriForLog(Uri uri) {
+  final sanitized = Uri(
+    scheme: uri.scheme,
+    userInfo: uri.userInfo,
+    host: uri.host,
+    port: uri.hasPort ? uri.port : null,
+    path: uri.path,
+  );
+  return sanitized.toString();
+}
