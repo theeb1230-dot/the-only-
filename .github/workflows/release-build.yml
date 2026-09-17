@@ -54,22 +54,31 @@ jobs:
           grep -q 'android.software.leanback' android/app/src/main/AndroidManifest.xml
           grep -q 'android.intent.category.LEANBACK_LAUNCHER' android/app/src/main/AndroidManifest.xml
           grep -q 'android.hardware.touchscreen.*false' android/app/src/main/AndroidManifest.xml
-      - name: Build Android TV APK
+      - name: Build Android TV APK from clean platform state
         run: |
+          # The Mobile build populated Gradle/Flutter incremental outputs before the
+          # manifest was changed. Clear those outputs so the TV APK is guaranteed
+          # to repackage the TV manifest instead of reusing the Mobile artifact.
+          flutter clean
+          flutter pub get
           flutter build apk --release --dart-define=THE_ONLY_DEVICE=tv
           cp build/app/outputs/flutter-apk/app-release.apk ../The-Only-Android-TV.apk
       - name: Verify distinct Android products
         run: |
+          set -euxo pipefail
           test -s ../The-Only-Android-Mobile.apk
           test -s ../The-Only-Android-TV.apk
           MOBILE_SHA="$(sha256sum ../The-Only-Android-Mobile.apk | cut -d' ' -f1)"
           TV_SHA="$(sha256sum ../The-Only-Android-TV.apk | cut -d' ' -f1)"
+          echo "mobile_sha256=$MOBILE_SHA"
+          echo "tv_sha256=$TV_SHA"
           test "$MOBILE_SHA" != "$TV_SHA"
           AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -1)"
           test -x "$AAPT"
-          "$AAPT" dump xmltree ../The-Only-Android-TV.apk AndroidManifest.xml | grep -q 'android.software.leanback'
-          "$AAPT" dump xmltree ../The-Only-Android-TV.apk AndroidManifest.xml | grep -q 'android.intent.category.LEANBACK_LAUNCHER'
-          "$AAPT" dump xmltree ../The-Only-Android-TV.apk AndroidManifest.xml | grep -q 'android.hardware.touchscreen'
+          "$AAPT" dump xmltree ../The-Only-Android-TV.apk AndroidManifest.xml > ../tv-manifest.txt
+          grep -q 'android.software.leanback' ../tv-manifest.txt
+          grep -q 'android.intent.category.LEANBACK_LAUNCHER' ../tv-manifest.txt
+          grep -q 'android.hardware.touchscreen' ../tv-manifest.txt
       - uses: actions/upload-artifact@v4
         with:
           name: the-only-android
