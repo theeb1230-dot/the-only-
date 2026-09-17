@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:the_only/core/domain/models.dart';
+import 'package:the_only/core/domain/validation.dart';
 import 'package:the_only/core/resolvers/resolver.dart';
 import 'package:the_only/core/resolvers/resolver_coordinator.dart';
 import 'package:the_only/core/resolvers/resolver_registry.dart';
+import 'package:the_only/core/security/url_policy.dart';
 import 'package:the_only/features/resolvers/resolvers_controller.dart';
 import 'package:the_only/features/resolvers/resolvers_screen.dart';
 
@@ -15,10 +17,15 @@ class FixtureResolver implements StreamResolver {
     StreamSource(uri: Uri.parse('https://example.invalid/embed'), protocol: StreamProtocol.embed, providerId: id, quality: 'Embed'),
   ];
 }
+
+ResolversController fixtureController() {
+  final registry = ResolverRegistry([FixtureResolver()]);
+  return ResolversController(registry, ResolverCoordinator(registry, const StreamValidator(UrlPolicy())));
+}
+
 void main() {
   testWidgets('Resolver shows support and keeps direct Download separate from Watch', (tester) async {
-    final registry = ResolverRegistry([FixtureResolver()]);
-    final controller = ResolversController(registry, ResolverCoordinator(registry));
+    final controller = fixtureController();
     var watches = 0; var downloads = 0;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller, onWatch: (_) async => watches++, onDownload: (_) async => downloads++))));
     await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://example.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pumpAndSettle();
@@ -28,8 +35,7 @@ void main() {
     await tester.tap(find.byKey(const Key('resolver-download-0'))); await tester.pump(); expect(downloads, 1);
   });
   testWidgets('Resolver reports unsupported URI without resolving', (tester) async {
-    final registry = ResolverRegistry([FixtureResolver()]);
-    final controller = ResolversController(registry, ResolverCoordinator(registry));
+    final controller = fixtureController();
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller))));
     await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://unsupported.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pump();
     expect(find.text('Unsupported'), findsOneWidget); expect(find.byKey(const Key('resolver-result-0')), findsNothing);
