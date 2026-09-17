@@ -1,0 +1,99 @@
+name: The Only Release Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/release-build.yml'
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - name: Repair platform scaffold and build release APK
+        run: |
+          flutter create --platforms=android --org com.theonly --project-name the_only .
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk ../The-Only-Android-Mobile.apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../The-Only-Android-TV.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: the-only-android
+          path: |
+            The-Only-Android-Mobile.apk
+            The-Only-Android-TV.apk
+          if-no-files-found: error
+
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Generate missing iOS platform scaffold
+        run: flutter create --platforms=ios --org com.theonly --project-name the_only .
+      - name: Build unsigned iOS app
+        run: flutter build ios --release --no-codesign
+      - name: Package unsigned IPA
+        run: |
+          rm -rf Payload
+          mkdir Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/TheOnly.app
+          zip -qry ../The-Only-iOS-UNSIGNED.ipa Payload
+          unzip -l ../The-Only-iOS-UNSIGNED.ipa | grep 'Payload/TheOnly.app/'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: the-only-ios-unsigned
+          path: The-Only-iOS-UNSIGNED.ipa
+          if-no-files-found: error
+
+  provenance:
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: the-only-*
+          merge-multiple: true
+          path: release
+      - name: Generate checksums and provenance
+        run: |
+          cd release
+          sha256sum The-Only-Android-Mobile.apk The-Only-Android-TV.apk The-Only-iOS-UNSIGNED.ipa > SHA256SUMS
+          {
+            echo "THE ONLY BUILD PROVENANCE"
+            echo "commit=${GITHUB_SHA}"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+            echo "android_signing=debug signing configuration; not production signed"
+            echo "ios_signing=UNSIGNED/no-codesign"
+            echo "ios_installability=requires signing before normal device installation"
+          } > BUILD_PROVENANCE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: the-only-release-bundle
+          path: release
+          if-no-files-found: error
