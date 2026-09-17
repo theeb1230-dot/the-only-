@@ -24,7 +24,7 @@ class LiveTvController {
     for (final provider in providers) {
       try { guide.addAll(await provider.programmes(channelId, from, to)); } catch (_) {}
     }
-    guide.sort((a, b) => a.start.compareTo(b.start));
+    guide.sort((a, b) => a.startsAt.compareTo(b.startsAt));
     return guide;
   }
 
