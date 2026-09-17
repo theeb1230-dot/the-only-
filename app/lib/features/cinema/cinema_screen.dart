@@ -46,6 +46,17 @@ class _CinemaScreenState extends State<CinemaScreen> {
     setState(() { _sources = sources; _busy = false; });
   }
 
+  Future<void> _download(MediaItem item, StreamSource source) async {
+    try {
+      await widget.controller.download(item, source);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Download queued')));
+    } on StateError catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -96,14 +107,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
               subtitle: Text(_sources[i].providerId),
               trailing: OutlinedButton.icon(
                 key: Key('cinema-download-$i'),
-                onPressed: () async {
-                  try {
-                    await widget.controller.download(item, _sources[i]);
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Download queued')));
-                  } on StateError catch (error) {
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
-                  }
-                },
+                onPressed: () => _download(item, _sources[i]),
                 icon: const Icon(Icons.download),
                 label: const Text('Download'),
               ),
