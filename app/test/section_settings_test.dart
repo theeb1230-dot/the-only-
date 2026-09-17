@@ -10,4 +10,19 @@ void main() {
     expect(settings.isEnabled(SectionId.optional), isTrue);
     expect(settings.visibleSections.length, 6);
   });
+
+  test('at least one section remains visible', () {
+    final settings = SectionSettings();
+    for (final id in SectionId.values) {
+      settings.setEnabled(id, false);
+    }
+    expect(settings.visibleSections, [SectionId.cinema]);
+  });
+
+  test('invalid persisted all-disabled state recovers to Cinema', () {
+    final settings = SectionSettings(
+      enabled: {for (final id in SectionId.values) id: false},
+    );
+    expect(settings.visibleSections, [SectionId.cinema]);
+  });
 }
