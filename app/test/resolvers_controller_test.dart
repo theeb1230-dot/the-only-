@@ -4,6 +4,7 @@ import 'package:the_only/core/domain/validation.dart';
 import 'package:the_only/core/resolvers/resolver.dart';
 import 'package:the_only/core/resolvers/resolver_coordinator.dart';
 import 'package:the_only/core/resolvers/resolver_registry.dart';
+import 'package:the_only/core/security/url_policy.dart';
 import 'package:the_only/features/resolvers/resolvers_controller.dart';
 
 class FixtureResolver implements StreamResolver {
@@ -18,9 +19,11 @@ class FixtureResolver implements StreamResolver {
 }
 
 void main() {
+  const policy = UrlPolicy();
+
   test('Resolvers exposes support and validated resolved streams', () async {
     final registry = ResolverRegistry([FixtureResolver()]);
-    final controller = ResolversController(registry, ResolverCoordinator(registry, StreamValidator()));
+    final controller = ResolversController(registry, ResolverCoordinator(registry, StreamValidator(policy)));
     final input = Uri.parse('https://fixture.test/embed/42');
     expect(controller.supports(input), isTrue);
     final streams = await controller.resolve(input);
@@ -29,7 +32,7 @@ void main() {
 
   test('Resolvers isolates resolver failure', () async {
     final registry = ResolverRegistry([FixtureResolver(fail: true)]);
-    final controller = ResolversController(registry, ResolverCoordinator(registry, StreamValidator()));
+    final controller = ResolversController(registry, ResolverCoordinator(registry, StreamValidator(policy)));
     expect(await controller.resolve(Uri.parse('https://fixture.test/embed/42')), isEmpty);
   });
 }
