@@ -1,5 +1,4 @@
 import '../../core/domain/models.dart';
-import '../../core/providers/provider.dart';
 import '../../core/providers/provider_registry.dart';
 import '../../core/search/search.dart';
 
