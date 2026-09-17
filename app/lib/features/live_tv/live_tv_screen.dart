@@ -1,0 +1,120 @@
+import 'package:flutter/material.dart';
+
+import '../../core/domain/live_channel.dart';
+import '../../core/domain/models.dart';
+import '../../core/domain/programme.dart';
+import 'live_tv_controller.dart';
+
+class LiveTvScreen extends StatefulWidget {
+  const LiveTvScreen({super.key, required this.controller, this.onWatch});
+
+  final LiveTvController controller;
+  final Future<void> Function(LiveChannel channel, StreamSource source)? onWatch;
+
+  @override
+  State<LiveTvScreen> createState() => _LiveTvScreenState();
+}
+
+class _LiveTvScreenState extends State<LiveTvScreen> {
+  List<LiveChannel> _channels = const [];
+  List<Programme> _guide = const [];
+  List<StreamSource> _streams = const [];
+  LiveChannel? _selected;
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChannels();
+  }
+
+  Future<void> _loadChannels() async {
+    setState(() { _busy = true; _error = null; });
+    try {
+      final channels = await widget.controller.channels();
+      if (!mounted) return;
+      setState(() => _channels = channels);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Unable to load channels');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _open(LiveChannel channel) async {
+    setState(() { _busy = true; _error = null; _selected = channel; _guide = const []; _streams = const []; });
+    final now = DateTime.now();
+    try {
+      final results = await Future.wait([
+        widget.controller.guide(channel.epgId ?? channel.id, now.subtract(const Duration(hours: 2)), now.add(const Duration(hours: 12))),
+        widget.controller.streams(channel),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _guide = results[0] as List<Programme>;
+        _streams = results[1] as List<StreamSource>;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Unable to load channel details');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      key: const Key('live-tv-screen'),
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(children: [
+          Text('Live TV', style: Theme.of(context).textTheme.headlineSmall),
+          const Spacer(),
+          IconButton(key: const Key('live-tv-refresh'), onPressed: _busy ? null : _loadChannels, icon: const Icon(Icons.refresh)),
+        ]),
+        if (_busy) const LinearProgressIndicator(),
+        if (_error != null) Text(_error!, key: const Key('live-tv-error')),
+        if (_channels.isEmpty && !_busy) const Text('No channels available'),
+        for (final channel in _channels)
+          ListTile(
+            key: Key('live-channel-${channel.id}'),
+            title: Text(channel.name),
+            subtitle: channel.group == null ? null : Text(channel.group!),
+            selected: _selected?.id == channel.id,
+            onTap: () => _open(channel),
+          ),
+        if (_selected case final channel?) ...[
+          const Divider(),
+          Text(channel.name, style: Theme.of(context).textTheme.titleLarge),
+          if (_guide.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('Guide', style: Theme.of(context).textTheme.titleMedium),
+            for (final programme in _guide.take(6))
+              ListTile(
+                dense: true,
+                key: Key('live-programme-${programme.startsAt.millisecondsSinceEpoch}'),
+                title: Text(programme.title),
+                subtitle: Text('${programme.startsAt.toLocal()} – ${programme.endsAt.toLocal()}'),
+              ),
+          ],
+          const SizedBox(height: 8),
+          Text('Streams', style: Theme.of(context).textTheme.titleMedium),
+          if (_streams.isEmpty && !_busy) const Text('No playable streams available'),
+          for (var i = 0; i < _streams.length; i++)
+            ListTile(
+              key: Key('live-stream-$i'),
+              title: Text(_streams[i].quality ?? _streams[i].protocol.name.toUpperCase()),
+              subtitle: Text(_streams[i].providerId),
+              trailing: FilledButton.icon(
+                key: Key('live-watch-$i'),
+                onPressed: widget.onWatch == null ? null : () => widget.onWatch!(channel, _streams[i]),
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Watch'),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+}
