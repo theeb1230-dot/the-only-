@@ -2,10 +2,13 @@ import '../../core/domain/live_channel.dart';
 import '../../core/domain/models.dart';
 import '../../core/domain/programme.dart';
 import '../../core/providers/live_provider.dart';
+import '../../core/resolvers/resolver_coordinator.dart';
 
 class LiveTvController {
-  LiveTvController(this.providers);
+  LiveTvController(this.providers, {required this.resolver});
+
   final List<LiveTvProvider> providers;
+  final ResolverCoordinator resolver;
 
   Future<List<LiveChannel>> channels() async {
     final result = <String, LiveChannel>{};
@@ -22,7 +25,9 @@ class LiveTvController {
   Future<List<Programme>> guide(String channelId, DateTime from, DateTime to) async {
     final guide = <Programme>[];
     for (final provider in providers) {
-      try { guide.addAll(await provider.programmes(channelId, from, to)); } catch (_) {}
+      try {
+        guide.addAll(await provider.programmes(channelId, from, to));
+      } catch (_) {}
     }
     guide.sort((a, b) => a.startsAt.compareTo(b.startsAt));
     return guide;
@@ -31,8 +36,19 @@ class LiveTvController {
   Future<List<StreamSource>> streams(LiveChannel channel) async {
     final streams = <StreamSource>[];
     for (final provider in providers) {
-      try { streams.addAll(await provider.streams(channel)); } catch (_) {}
+      try {
+        streams.addAll(await provider.streams(channel));
+      } catch (_) {}
     }
     return streams;
+  }
+
+  Future<StreamSource?> resolveForWatch(
+    LiveChannel channel,
+    StreamSource source,
+  ) async {
+    final resolved = await resolver.resolve(source.uri);
+    if (resolved.isEmpty) return null;
+    return resolved.first;
   }
 }
