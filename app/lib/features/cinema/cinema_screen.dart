@@ -46,6 +46,25 @@ class _CinemaScreenState extends State<CinemaScreen> {
     setState(() { _sources = sources; _busy = false; });
   }
 
+  Future<void> _watch(MediaItem item, StreamSource source) async {
+    setState(() { _busy = true; _error = null; });
+    try {
+      final resolved = await widget.controller.resolveForWatch(item, source);
+      if (!mounted) return;
+      if (resolved == null) {
+        setState(() => _error = 'Selected source could not be resolved safely');
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Resolved ${resolved.protocol.name.toUpperCase()} source for playback')),
+      );
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Watch source resolution failed');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _download(MediaItem item, StreamSource source) async {
     try {
       await widget.controller.download(item, source);
@@ -92,24 +111,28 @@ class _CinemaScreenState extends State<CinemaScreen> {
           const Divider(),
           Text(item.title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
-          FilledButton.icon(
-            key: const Key('cinema-watch'),
-            onPressed: () => widget.controller.watch(item),
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('Watch'),
-          ),
-          const SizedBox(height: 8),
           if (_sources.isEmpty && !_busy) const Text('No direct sources available'),
           for (var i = 0; i < _sources.length; i++)
             ListTile(
               key: Key('cinema-source-$i'),
               title: Text(_sources[i].quality ?? _sources[i].protocol.name.toUpperCase()),
               subtitle: Text(_sources[i].providerId),
-              trailing: OutlinedButton.icon(
-                key: Key('cinema-download-$i'),
-                onPressed: () => _download(item, _sources[i]),
-                icon: const Icon(Icons.download),
-                label: const Text('Download'),
+              trailing: Wrap(
+                spacing: 8,
+                children: [
+                  FilledButton.icon(
+                    key: Key('cinema-watch-$i'),
+                    onPressed: _busy ? null : () => _watch(item, _sources[i]),
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Watch'),
+                  ),
+                  OutlinedButton.icon(
+                    key: Key('cinema-download-$i'),
+                    onPressed: () => _download(item, _sources[i]),
+                    icon: const Icon(Icons.download),
+                    label: const Text('Download'),
+                  ),
+                ],
               ),
             ),
         ],
