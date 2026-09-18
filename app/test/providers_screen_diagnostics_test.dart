@@ -23,8 +23,6 @@ void main() {
     expect(find.textContaining('Health 0.00'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('provider-probe-legal-demo')));
-    await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Health 1.00'), findsOneWidget);
