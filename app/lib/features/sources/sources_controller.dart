@@ -1,11 +1,22 @@
+import '../../core/data/downloads.dart';
+import '../../core/domain/download_policy.dart';
 import '../../core/domain/models.dart';
 import '../../core/providers/provider_registry.dart';
+import '../../core/resolvers/resolver_coordinator.dart';
 
 class SourcesController {
-  SourcesController(this.registry);
-  final ProviderRegistry registry;
+  SourcesController(
+    this.registry, {
+    required this.resolver,
+    required this.downloads,
+  });
 
-  List<String> get providerIds => registry.all.map((provider) => provider.id).toList(growable: false);
+  final ProviderRegistry registry;
+  final ResolverCoordinator resolver;
+  final DownloadsRepository downloads;
+
+  List<String> get providerIds =>
+      registry.all.map((provider) => provider.id).toList(growable: false);
 
   Future<List<MediaItem>> search(String query) async {
     final results = <String, MediaItem>{};
@@ -34,5 +45,27 @@ class SourcesController {
       }
     }
     return Map.unmodifiable(result);
+  }
+
+  Future<StreamSource?> resolveForWatch(
+    MediaItem item,
+    StreamSource source,
+  ) async {
+    final resolved = await resolver.resolve(source.uri);
+    if (resolved.isEmpty) return null;
+    return resolved.first;
+  }
+
+  Future<DownloadJob> download(MediaItem item, StreamSource source) async {
+    if (!isDownloadable(source)) {
+      throw StateError('Selected source is not directly downloadable');
+    }
+    final job = DownloadJob(
+      id: '${item.kind.name}:${item.id}:${source.uri}',
+      source: source,
+      state: DownloadState.queued,
+    );
+    await downloads.enqueue(job);
+    return job;
   }
 }
