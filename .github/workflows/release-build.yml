@@ -27,12 +27,58 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - name: Repair platform scaffold and build release APK
+      - name: Generate Android platform scaffold
+        run: flutter create --platforms=android --org com.theonly --project-name the_only .
+      - name: Build Android Mobile APK
         run: |
-          flutter create --platforms=android --org com.theonly --project-name the_only .
           flutter build apk --release
           cp build/app/outputs/flutter-apk/app-release.apk ../The-Only-Android-Mobile.apk
+      - name: Configure Android TV manifest
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/src/main/AndroidManifest.xml')
+          s = p.read_text()
+          marker = '<application'
+          features = '''    <uses-feature android:name="android.software.leanback" android:required="true" />\n    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />\n'''
+          if 'android.software.leanback' not in s:
+              s = s.replace(marker, features + marker, 1)
+          launcher = '<category android:name="android.intent.category.LAUNCHER"/>'
+          leanback = launcher + '\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>'
+          if 'android.intent.category.LEANBACK_LAUNCHER' not in s:
+              if launcher not in s:
+                  raise SystemExit('Launcher category not found; refusing unsafe TV manifest mutation')
+              s = s.replace(launcher, leanback, 1)
+          p.write_text(s)
+          PY
+          grep -q 'android.software.leanback' android/app/src/main/AndroidManifest.xml
+          grep -q 'android.intent.category.LEANBACK_LAUNCHER' android/app/src/main/AndroidManifest.xml
+          grep -q 'android.hardware.touchscreen.*false' android/app/src/main/AndroidManifest.xml
+      - name: Build Android TV APK from clean platform state
+        run: |
+          # The Mobile build populated Gradle/Flutter incremental outputs before the
+          # manifest was changed. Clear those outputs so the TV APK is guaranteed
+          # to repackage the TV manifest instead of reusing the Mobile artifact.
+          flutter clean
+          flutter pub get
+          flutter build apk --release --dart-define=THE_ONLY_DEVICE=tv
           cp build/app/outputs/flutter-apk/app-release.apk ../The-Only-Android-TV.apk
+      - name: Verify distinct Android products
+        run: |
+          set -euxo pipefail
+          test -s ../The-Only-Android-Mobile.apk
+          test -s ../The-Only-Android-TV.apk
+          MOBILE_SHA="$(sha256sum ../The-Only-Android-Mobile.apk | cut -d' ' -f1)"
+          TV_SHA="$(sha256sum ../The-Only-Android-TV.apk | cut -d' ' -f1)"
+          echo "mobile_sha256=$MOBILE_SHA"
+          echo "tv_sha256=$TV_SHA"
+          test "$MOBILE_SHA" != "$TV_SHA"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -1)"
+          test -x "$AAPT"
+          "$AAPT" dump xmltree ../The-Only-Android-TV.apk AndroidManifest.xml > ../tv-manifest.txt
+          grep -q 'android.software.leanback' ../tv-manifest.txt
+          grep -q 'android.intent.category.LEANBACK_LAUNCHER' ../tv-manifest.txt
+          grep -q 'android.hardware.touchscreen' ../tv-manifest.txt
       - uses: actions/upload-artifact@v4
         with:
           name: the-only-android
@@ -87,12 +133,18 @@ jobs:
           test -s The-Only-Android-TV.apk
           test -s The-Only-iOS-UNSIGNED.ipa
           unzip -l The-Only-iOS-UNSIGNED.ipa | grep 'Payload/TheOnly.app/'
+          MOBILE_SHA="$(sha256sum The-Only-Android-Mobile.apk | cut -d' ' -f1)"
+          TV_SHA="$(sha256sum The-Only-Android-TV.apk | cut -d' ' -f1)"
+          test "$MOBILE_SHA" != "$TV_SHA"
           sha256sum The-Only-Android-Mobile.apk The-Only-Android-TV.apk The-Only-iOS-UNSIGNED.ipa > SHA256SUMS
           {
             echo "THE ONLY BUILD PROVENANCE"
             echo "commit=${GITHUB_SHA}"
             echo "version=0.1.0+1"
             echo "workflow_run=${GITHUB_RUN_ID}"
+            echo "android_mobile_sha256=${MOBILE_SHA}"
+            echo "android_tv_sha256=${TV_SHA}"
+            echo "android_tv_profile=LEANBACK_LAUNCHER; leanback required; touchscreen not required"
             echo "android_signing=debug signing configuration; not production signed"
             echo "ios_signing=UNSIGNED/no-codesign"
             echo "ios_installability=requires signing before normal device installation"
@@ -117,4 +169,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v0.1.0-build.${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" release/The-Only-Android-Mobile.apk release/The-Only-Android-TV.apk release/The-Only-iOS-UNSIGNED.ipa release/SHA256SUMS release/BUILD_PROVENANCE.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "The Only 0.1.0+1" --notes "Android Mobile + Android TV + iOS UNSIGNED/no-codesign built from exact commit $GITHUB_SHA. The iOS IPA requires signing before normal device installation. Android artifacts use the repository's documented debug signing configuration, not production signing."
+          gh release create "$TAG" release/The-Only-Android-Mobile.apk release/The-Only-Android-TV.apk release/The-Only-iOS-UNSIGNED.ipa release/SHA256SUMS release/BUILD_PROVENANCE.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "The Only 0.1.0+1" --notes "Distinct Android Mobile + Android TV (LEANBACK) + iOS UNSIGNED/no-codesign built from exact commit $GITHUB_SHA. The iOS IPA requires signing before normal device installation. Android artifacts use the repository's documented debug signing configuration, not production signing."
