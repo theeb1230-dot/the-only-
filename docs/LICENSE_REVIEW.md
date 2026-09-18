@@ -12,6 +12,7 @@ Public availability is not permission to redistribute or incorporate code. Licen
 | Python provider/resolver set | PyEmbed-Api | `5741c84279defef8b3a5754f2305d39980683b2f` | no LICENSE/NOTICE found at inspected root | REFERENCE_ONLY | clean-room behavior only |
 | IPTV/M3U/XCAPI/EPG | M3U-XCAPI-EPG-IPTV-Stremio | `2d15db6e9f6c4f70258f8ed88fd9203cb0f5c907` | no LICENSE/NOTICE found at inspected root | REFERENCE_ONLY | clean-room behavior only |
 | URL resolution | ResolveURL | `7841296a564bf0d6cb301e8e4b6bed1a1201dc88` | root `LICENSE` is GNU GPL v2 | REFERENCE_ONLY_GPL2 | do not copy into The Only while product-wide GPL obligations are not explicitly adopted; implement compatible behavior independently |
+| Native in-app playback | Flutter `video_player` | package `2.14.0` | pub.dev license: BSD-3-Clause, copyright The Flutter Authors | CLEARED_BSD3 | dependency use permitted with required copyright/conditions/disclaimer notices retained |
 | Sixth section | archived agreed source | exact SHA retained in archive manifest | separate review required before code migration | REFERENCE_ONLY | local feature gate only until cleared |
 | Android/ADB tooling | Electron-ADB-ToolKit | archived | out of product | OUT_OF_PRODUCT | archive/reference only |
 | Desktop/hardware projects | DeskEngine, XStat, Rainity projects | archived | out of product | OUT_OF_PRODUCT | archive/reference only |
@@ -21,4 +22,4 @@ Public availability is not permission to redistribute or incorporate code. Licen
 Record exact SHA, license filename/text, SPDX identifier when determinable, copyright/notice obligations, redistribution/modification conditions, dependency-license concerns, and a final reuse decision. A permissive project license does not automatically clear third-party provider endpoints, content, credentials, trademarks, datasets, or dependencies.
 
 ## Current implementation rule
-Cinema and Live TV implementations are clean-room. Sources may use The Only-owned adapters against documented interfaces; no TMDB-Embed-API source is copied unless its MIT notice is carried into `THIRD_PARTY_NOTICES.md` and the copied portion is separately reviewed. ResolveURL and PyEmbed behavior remains independently implemented behind The Only resolver contracts.
+Cinema and Live TV implementations are clean-room. Sources may use The Only-owned adapters against documented interfaces; no TMDB-Embed-API source is copied unless its MIT notice is carried into `THIRD_PARTY_NOTICES.md` and the copied portion is separately reviewed. ResolveURL and PyEmbed behavior remains independently implemented behind The Only resolver contracts. Native playback uses the official Flutter `video_player` package under BSD-3-Clause; media/provider authorization remains a separate fail-closed gate.
