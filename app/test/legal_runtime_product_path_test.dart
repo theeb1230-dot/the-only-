@@ -22,9 +22,9 @@ ResolverCoordinator legalResolver() => ResolverCoordinator(
 
 void main() {
   testWidgets('legal Cinema runtime provider reaches resolved player launch and keeps Download separate', (tester) async {
-    final favorites = InMemoryFavoritesRepository();
-    final history = InMemoryHistoryRepository();
-    final downloads = InMemoryDownloadsRepository();
+    final favorites = MemoryFavoritesRepository();
+    final history = MemoryHistoryRepository();
+    final downloads = MemoryDownloadsRepository();
     final controller = CinemaController(
       providers: [LegalDemoProvider()],
       favorites: favorites,
