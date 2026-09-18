@@ -7,4 +7,51 @@ void main() {
     expect(policy.allows(Uri.parse('https://example.test/a.m3u8')), isTrue);
     expect(policy.allows(Uri.parse('http://example.test/a.m3u8')), isFalse);
   });
+
+  test('fails closed for embedded credentials and empty hosts', () {
+    const policy = UrlPolicy();
+    expect(
+      policy.allows(Uri.parse('https://user:pass@example.test/a.m3u8')),
+      isFalse,
+    );
+    expect(policy.allows(Uri.parse('https:///a.m3u8')), isFalse);
+  });
+
+  test('optional host allowlist is exact and case insensitive', () {
+    const policy = UrlPolicy(allowedHosts: {'media.example.test'});
+    expect(
+      policy.allows(Uri.parse('https://MEDIA.EXAMPLE.TEST/a.m3u8')),
+      isTrue,
+    );
+    expect(
+      policy.allows(Uri.parse('https://evil-media.example.test/a.m3u8')),
+      isFalse,
+    );
+  });
+
+  test('redirect policy rejects downgrade cross-boundary and blocked hosts', () {
+    const policy = UrlPolicy(
+      allowHttpForLocalhost: true,
+      allowedHosts: {'media.example.test', 'localhost'},
+    );
+    final origin = Uri.parse('https://media.example.test/a.m3u8');
+    expect(
+      policy.allowsRedirect(
+        origin,
+        Uri.parse('https://media.example.test/b.m3u8'),
+      ),
+      isTrue,
+    );
+    expect(
+      policy.allowsRedirect(origin, Uri.parse('http://localhost/b.m3u8')),
+      isFalse,
+    );
+    expect(
+      policy.allowsRedirect(
+        origin,
+        Uri.parse('https://unlisted.example.test/b.m3u8'),
+      ),
+      isFalse,
+    );
+  });
 }
