@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:the_only/core/data/persistent_library.dart';
 import 'package:the_only/main.dart';
 
 void main() {
-  testWidgets('renders one unified shell and locally gates sixth section', (tester) async {
-    await tester.pumpWidget(const TheOnlyApp());
+  testWidgets('renders unified shell with local sixth-section gate', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final store = PersistentLibraryStore(await SharedPreferences.getInstance());
+    await store.initialize();
+
+    await tester.pumpWidget(TheOnlyApp(store: store));
     expect(find.text('The Only'), findsOneWidget);
     expect(find.text('Cinema'), findsWidgets);
     expect(find.text('Live TV'), findsOneWidget);
