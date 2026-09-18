@@ -19,9 +19,10 @@ import 'features/live_tv/live_tv_controller.dart';
 import 'features/live_tv/live_tv_screen.dart';
 import 'features/resolvers/resolvers_controller.dart';
 import 'features/resolvers/resolvers_screen.dart';
-import 'features/section_page.dart';
 import 'features/sources/sources_controller.dart';
 import 'features/sources/sources_screen.dart';
+import 'features/system_diagnostics/system_diagnostics_controller.dart';
+import 'features/system_diagnostics/system_diagnostics_screen.dart';
 import 'features/tools/providers_controller.dart';
 import 'features/tools/providers_screen.dart';
 
@@ -89,6 +90,9 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
   );
   late final ProvidersController providerTools =
       ProvidersController(providers, health, const []);
+  late final SystemDiagnosticsController diagnostics = SystemDiagnosticsController(
+    RuntimeSystemSnapshotProvider(),
+  );
 
   SectionId selected = SectionId.cinema;
 
@@ -98,7 +102,7 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
     SectionId.sources: 'Sources',
     SectionId.resolvers: 'Resolvers',
     SectionId.tools: 'Tools / Providers',
-    SectionId.optional: 'Optional',
+    SectionId.optional: 'System Diagnostics',
   };
 
   void openSettings() {
@@ -126,11 +130,7 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
         SectionId.sources => SourcesScreen(controller: sources),
         SectionId.resolvers => ResolversScreen(controller: resolverController),
         SectionId.tools => ProvidersScreen(controller: providerTools),
-        SectionId.optional => const SectionPage(
-            title: 'Optional',
-            description:
-                'Locally gated sixth interface. Disabled by default.',
-          ),
+        SectionId.optional => SystemDiagnosticsScreen(controller: diagnostics),
       };
 
   @override

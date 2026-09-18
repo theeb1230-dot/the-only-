@@ -5,7 +5,7 @@ import 'package:the_only/core/data/persistent_library.dart';
 import 'package:the_only/main.dart';
 
 void main() {
-  testWidgets('renders unified shell with local sixth-section gate', (tester) async {
+  testWidgets('renders unified shell with functional local sixth-section gate', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final store = PersistentLibraryStore(await SharedPreferences.getInstance());
     await store.initialize();
@@ -17,7 +17,7 @@ void main() {
     expect(find.text('Sources'), findsOneWidget);
     expect(find.text('Resolvers'), findsOneWidget);
     expect(find.text('Tools / Providers'), findsOneWidget);
-    expect(find.text('Optional'), findsNothing);
+    expect(find.text('System Diagnostics'), findsNothing);
 
     await tester.tap(find.byKey(const Key('settings-button')));
     await tester.pumpAndSettle();
@@ -26,6 +26,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('Optional'), findsOneWidget);
+
+    expect(find.text('System Diagnostics'), findsWidgets);
+    await tester.tap(find.text('System Diagnostics').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
+    expect(find.text('Local device information only. No telemetry is uploaded.'), findsOneWidget);
   });
 }
