@@ -63,7 +63,8 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
   late final favorites = PersistentFavoritesRepository(widget.store);
   late final history = PersistentHistoryRepository(widget.store);
   late final downloads = PersistentDownloadsRepository(widget.store);
-  late final ResolverRegistry resolvers = ResolverRegistry(const [DirectMediaResolver()]);
+  late final ResolverRegistry resolvers =
+      ResolverRegistry(const [DirectMediaResolver()]);
   late final ResolverCoordinator resolverCoordinator =
       ResolverCoordinator(resolvers, const StreamValidator(UrlPolicy()));
   late final CinemaController cinema = CinemaController(
@@ -73,13 +74,21 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
     downloads: downloads,
     resolver: resolverCoordinator,
   );
-  late final LiveTvController liveTv = LiveTvController([LegalLiveDemoProvider()]);
-  late final SourcesController sources = SourcesController(providers);
+  late final LiveTvController liveTv = LiveTvController(
+    [LegalLiveDemoProvider()],
+    resolver: resolverCoordinator,
+  );
+  late final SourcesController sources = SourcesController(
+    providers,
+    resolver: resolverCoordinator,
+    downloads: downloads,
+  );
   late final ResolversController resolverController = ResolversController(
     resolvers,
     resolverCoordinator,
   );
-  late final ProvidersController providerTools = ProvidersController(providers, health, const []);
+  late final ProvidersController providerTools =
+      ProvidersController(providers, health, const []);
 
   SectionId selected = SectionId.cinema;
 
@@ -93,27 +102,36 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
   };
 
   void openSettings() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SectionSettingsScreen(
-      settings: settings,
-      onChanged: (id, enabled) {
-        setState(() {
-          if (!enabled && selected == id) selected = SectionId.cinema;
-        });
-      },
-    ))).then((_) => setState(() {}));
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => SectionSettingsScreen(
+              settings: settings,
+              onChanged: (id, enabled) {
+                setState(() {
+                  if (!enabled && selected == id) {
+                    selected = SectionId.cinema;
+                  }
+                });
+              },
+            ),
+          ),
+        )
+        .then((_) => setState(() {}));
   }
 
   Widget sectionBody() => switch (selected) {
-    SectionId.cinema => CinemaScreen(controller: cinema),
-    SectionId.liveTv => LiveTvScreen(controller: liveTv),
-    SectionId.sources => SourcesScreen(controller: sources),
-    SectionId.resolvers => ResolversScreen(controller: resolverController),
-    SectionId.tools => ProvidersScreen(controller: providerTools),
-    SectionId.optional => const SectionPage(
-      title: 'Optional',
-      description: 'Locally gated sixth interface. Disabled by default.',
-    ),
-  };
+        SectionId.cinema => CinemaScreen(controller: cinema),
+        SectionId.liveTv => LiveTvScreen(controller: liveTv),
+        SectionId.sources => SourcesScreen(controller: sources),
+        SectionId.resolvers => ResolversScreen(controller: resolverController),
+        SectionId.tools => ProvidersScreen(controller: providerTools),
+        SectionId.optional => const SectionPage(
+            title: 'Optional',
+            description:
+                'Locally gated sixth interface. Disabled by default.',
+          ),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -122,13 +140,25 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('The Only'),
-        actions: [IconButton(key: const Key('settings-button'), onPressed: openSettings, icon: const Icon(Icons.settings))],
+        actions: [
+          IconButton(
+            key: const Key('settings-button'),
+            onPressed: openSettings,
+            icon: const Icon(Icons.settings),
+          ),
+        ],
       ),
       body: sectionBody(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: visible.indexOf(selected),
         onDestinationSelected: (index) => setState(() => selected = visible[index]),
-        destinations: [for (final section in visible) NavigationDestination(icon: const Icon(Icons.apps), label: labels[section]!)],
+        destinations: [
+          for (final section in visible)
+            NavigationDestination(
+              icon: const Icon(Icons.apps),
+              label: labels[section]!,
+            ),
+        ],
       ),
     );
   }
