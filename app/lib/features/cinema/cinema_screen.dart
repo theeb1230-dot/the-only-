@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/domain/models.dart';
+import '../../core/player/player_screen.dart';
 import 'cinema_controller.dart';
 
 class CinemaScreen extends StatefulWidget {
@@ -41,9 +42,15 @@ class _CinemaScreenState extends State<CinemaScreen> {
 
   Future<void> _open(MediaItem item) async {
     setState(() { _busy = true; _error = null; _selected = item; _sources = const []; });
-    final sources = await widget.controller.sources(item);
-    if (!mounted) return;
-    setState(() { _sources = sources; _busy = false; });
+    try {
+      final sources = await widget.controller.sources(item);
+      if (!mounted) return;
+      setState(() => _sources = sources);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Could not load sources');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _watch(MediaItem item, StreamSource source) async {
@@ -55,8 +62,10 @@ class _CinemaScreenState extends State<CinemaScreen> {
         setState(() => _error = 'Selected source could not be resolved safely');
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Resolved ${resolved.protocol.name.toUpperCase()} source for playback')),
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PlayerScreen(source: resolved, title: item.title),
+        ),
       );
     } catch (_) {
       if (mounted) setState(() => _error = 'Watch source resolution failed');
