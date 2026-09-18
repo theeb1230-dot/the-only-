@@ -12,7 +12,18 @@ class ProvidersScreen extends StatefulWidget {
 }
 
 class _ProvidersScreenState extends State<ProvidersScreen> {
+  final Set<String> _probing = <String>{};
+
   List<ProviderToolState> get _states => widget.controller.states();
+
+  Future<void> _probe(String id) async {
+    setState(() => _probing.add(id));
+    try {
+      await widget.controller.probe(id);
+    } finally {
+      if (mounted) setState(() => _probing.remove(id));
+    }
+  }
 
   void _setEnabled(String id, bool value) {
     setState(() => widget.controller.setEnabled(id, value));
@@ -53,6 +64,14 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
             trailing: Wrap(
               spacing: 4,
               children: [
+                IconButton(
+                  key: Key('provider-probe-${state.id}'),
+                  tooltip: 'Run health probe',
+                  onPressed: _probing.contains(state.id) ? null : () => _probe(state.id),
+                  icon: _probing.contains(state.id)
+                      ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.monitor_heart_outlined),
+                ),
                 IconButton(
                   key: Key('provider-priority-down-${state.id}'),
                   tooltip: 'Lower priority',
