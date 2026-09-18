@@ -4,10 +4,21 @@ import '../../core/domain/models.dart';
 import '../../core/player/player_screen.dart';
 import 'cinema_controller.dart';
 
+typedef CinemaPlayerLauncher = Future<void> Function(
+  BuildContext context,
+  MediaItem item,
+  StreamSource source,
+);
+
 class CinemaScreen extends StatefulWidget {
-  const CinemaScreen({super.key, required this.controller});
+  const CinemaScreen({
+    super.key,
+    required this.controller,
+    this.playerLauncher,
+  });
 
   final CinemaController controller;
+  final CinemaPlayerLauncher? playerLauncher;
 
   @override
   State<CinemaScreen> createState() => _CinemaScreenState();
@@ -53,6 +64,19 @@ class _CinemaScreenState extends State<CinemaScreen> {
     }
   }
 
+  Future<void> _launchPlayer(MediaItem item, StreamSource source) async {
+    final launcher = widget.playerLauncher;
+    if (launcher != null) {
+      await launcher(context, item, source);
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlayerScreen(source: source, title: item.title),
+      ),
+    );
+  }
+
   Future<void> _watch(MediaItem item, StreamSource source) async {
     setState(() { _busy = true; _error = null; });
     try {
@@ -62,11 +86,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
         setState(() => _error = 'Selected source could not be resolved safely');
         return;
       }
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => PlayerScreen(source: resolved, title: item.title),
-        ),
-      );
+      await _launchPlayer(item, resolved);
     } catch (_) {
       if (mounted) setState(() => _error = 'Watch source resolution failed');
     } finally {
