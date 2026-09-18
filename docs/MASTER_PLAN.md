@@ -13,7 +13,7 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-02 | License/NOTICE/source provenance gate | DONE | LICENSE_REVIEW.md + THIRD_PARTY_NOTICES.md exact-SHA ledger |
 | TO-03 | Architecture/domain contracts without UI-provider coupling | DONE | ARCHITECTURE.md + domain/provider contracts |
 | TO-04 | Shared navigation/routing/back/deep state | DONE | unified six-section shell and navigation tests |
-| TO-05 | Settings, local feature gates and preferences | DONE | Settings controls + sixth-section local gate |
+| TO-05 | Settings, local feature gates and preferences | IN_PROGRESS | restart persistence merged via #31 at main c92f07d98981b1d8229bfe53c1e72f2c89d68e82; functional/device restart evidence still required before DONE |
 | TO-06 | Real ProviderRegistry and allowed-provider registration | IN_PROGRESS | legal Cinema provider registered; broader registry/product verification pending |
 | TO-07 | Real ResolverRegistry integrated with Watch paths | IN_PROGRESS | resolver contracts/controllers exist; shell/player Watch integration pending |
 | TO-08 | Health/ranking/priority/fallback/timeouts/cancellation | IN_PROGRESS | health store/policies exist; end-to-end probes/ranking pending |
@@ -22,17 +22,17 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-11 | Cinema details/list/seasons/episodes where applicable | IN_PROGRESS | deeper functional product path pending |
 | TO-12 | Cinema source selection + separate Watch | IN_PROGRESS | source/Watch UI exists; actual player path pending |
 | TO-13 | Cinema separate Download + honest failure states | IN_PROGRESS | explicit Download action exists; execution/durable state pending |
-| TO-14 | Persistent Favorites | IN_PROGRESS | memory repository exists; durable repository pending |
-| TO-15 | Persistent History/resume | IN_PROGRESS | memory repository exists; durable repository pending |
-| TO-16 | Persistent legal Downloads manager | IN_PROGRESS | queue/actions exist; durable/platform execution pending |
-| TO-17 | Live TV provider/configuration + authorized channels | IN_PROGRESS | PR #23 merged legal runtime channel provider; LIVE/player proof pending |
+| TO-14 | Persistent Favorites | IN_PROGRESS | PersistentFavoritesRepository uses versioned SharedPreferences store; restart/UI evidence pending |
+| TO-15 | Persistent History/resume | IN_PROGRESS | PersistentHistoryRepository uses versioned SharedPreferences store; resume/runtime evidence pending |
+| TO-16 | Persistent legal Downloads manager | IN_PROGRESS | PersistentDownloadsRepository stores queue metadata; platform file execution and runtime evidence pending |
+| TO-17 | Live TV provider/configuration + authorized channels | IN_PROGRESS | legal runtime channel provider exists; LIVE/player proof pending |
 | TO-18 | Live TV EPG now/next/list | IN_PROGRESS | legal provider exposes programme data; product runtime proof pending |
 | TO-19 | Live TV stream selection/player/fallback | IN_PROGRESS | stream selection exists; actual playback/fallback runtime proof pending |
 | TO-20 | Sources UI results/source/quality/failure/fallback | IN_PROGRESS | provider discovery exists; full product flow pending |
 | TO-21 | Resolvers diagnostics UI + real Watch integration | IN_PROGRESS | diagnostics/controller exists; Watch/player integration pending |
 | TO-22 | Tools/Providers registry/health/priority/preferences/diagnostics | IN_PROGRESS | registry/health controller exists; complete product diagnostics pending |
-| TO-23 | Sixth interface clean-room + Feature Gate + functional runtime proof | IN_PROGRESS | gate exists; placeholder is not acceptance; license/archive review required before clean-room implementation |
-| TO-24 | Production persistent storage + migrations/versioning | IN_PROGRESS | abstractions/memory implementations exist; durable backend pending |
+| TO-23 | Sixth interface clean-room + Feature Gate + functional runtime proof | IN_PROGRESS | clean-room System Diagnostics merged via #30 at main cd594b6cba7a9c61e096f8a1132be3e8ad1248c2; gate remains disabled by default; DEVICE/runtime proof still required |
+| TO-24 | Production persistent storage + migrations/versioning | IN_PROGRESS | PersistentLibraryStore schema v1 and fail-closed version checks exist; migration/restart/runtime evidence pending |
 | TO-25 | Player core HLS/MP4/DASH with platform-safe behavior | IN_PROGRESS | coordinator/adapters modeled; actual platform playback pending |
 | TO-26 | Legal embed/WebView last-resort fallback + host/navigation policy | IN_PROGRESS | policy/model work exists; runtime adapter proof pending |
 | TO-27 | Watch/Download separation end-to-end | IN_PROGRESS | UI actions separate; complete execution paths pending |
@@ -41,7 +41,7 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-30 | iOS scaffold/runtime build readiness | IN_PROGRESS | unsigned iOS build/package succeeds; runtime/device proof pending |
 | TO-31 | Security hardening and credential-safe logging | IN_PROGRESS | must regress https://user:pass@x.test/a?token=secret#part with no userInfo/query/fragment/token/secret leakage; URL/redirect/host policies fail closed |
 | TO-32 | Functional integration/smoke suite for all six interfaces | TODO | loading/error/empty/results/details/actions/player/back/state; fixtures are not runtime proof |
-| TO-33 | LIVE verification suite using legal/authorized sources | TODO | separate from deterministic CI; record honest live failures |
+| TO-33 | LIVE verification suite using legal/authorized sources | IN_PROGRESS | separate LIVE workflow exists and passed for current legal MDN sample; broaden applicable legal source/runtime evidence before DONE |
 | TO-34 | DEVICE verification matrix: Android Mobile/TV/iOS | TODO | unavailable hardware remains DEVICE_REQUIRED_PENDING, never PASS |
 | TO-35 | Performance/reliability hardening | TODO | startup/memory/cancellation/retry/offline/error recovery/no hangs |
 | TO-36 | Accessibility/localization/RTL/TV focus consistency | TODO | understandable loading/empty/error states and platform focus evidence |
