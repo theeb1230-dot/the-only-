@@ -69,6 +69,22 @@ class ProvidersController {
     preferencesStore?.setInt(_priorityKey(id), priority);
   }
 
+  Future<ProviderHealth> probe(String id) async {
+    final provider = registry.byId(id);
+    if (provider == null) throw ArgumentError.value(id, 'id', 'unknown provider');
+    final started = DateTime.now();
+    var success = false;
+    try {
+      await provider.search('').timeout(const Duration(seconds: 5));
+      success = true;
+    } catch (_) {
+      success = false;
+    }
+    final latencyMs = DateTime.now().difference(started).inMilliseconds;
+    healthStore.record(id, success: success, latencyMs: latencyMs);
+    return healthStore.health(id);
+  }
+
   void recordProbe(String id, {required bool success, required int latencyMs}) {
     if (registry.byId(id) == null) throw ArgumentError.value(id, 'id', 'unknown provider');
     healthStore.record(id, success: success, latencyMs: latencyMs);
