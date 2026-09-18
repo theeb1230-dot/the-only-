@@ -22,5 +22,12 @@ This ledger records third-party licensing relevant to The Only. Archive retentio
 - Obligation: retain the copyright notice, redistribution conditions, and disclaimer in source/binary distributions as required by the license.
 - Current product use: native in-app playback surface for policy-approved direct media sources. Provider/content authorization remains independently gated.
 
+## Flutter shared_preferences
+- Package: `shared_preferences` from publisher `flutter.dev`.
+- Product dependency range: `^2.5.5`.
+- License: BSD-3-Clause, copyright The Flutter Authors.
+- Obligation: retain the copyright notice, redistribution conditions, and disclaimer in source/binary distributions as required by the license.
+- Current product use: versioned local persistence for non-secret Favorites, History/resume metadata, and Download queue metadata. Credentials and provider secrets are explicitly excluded.
+
 ## No-license sources
 Cinema-HQ, PyEmbed-Api, and M3U-XCAPI-EPG-IPTV-Stremio had no root LICENSE/NOTICE in the exact revisions inspected. They remain reference-only; The Only uses clean-room implementations based on public behavior and its own contracts.
