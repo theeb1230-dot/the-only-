@@ -34,7 +34,7 @@ class _TheOnlyShellState extends State<TheOnlyShell>{
  late final CinemaController cinema=CinemaController(providers:providers.all.toList(growable:false),favorites:favorites,history:history,downloads:downloads,resolver:resolverCoordinator);
  late final LiveTvController liveTv=LiveTvController([LegalLiveDemoProvider()],resolver:resolverCoordinator);
  late final SourcesController sources=SourcesController(providers,resolver:resolverCoordinator,downloads:downloads); late final ResolversController resolverController=ResolversController(resolvers,resolverCoordinator);
- late final ProvidersController providerTools=ProvidersController(providers,health,const []); late final SystemDiagnosticsController diagnostics=SystemDiagnosticsController(RuntimeSystemSnapshotProvider());
+ late final ProvidersController providerTools=ProvidersController(providers,health,const [],preferencesStore:widget.store.preferences); late final SystemDiagnosticsController diagnostics=SystemDiagnosticsController(RuntimeSystemSnapshotProvider());
  SectionId selected=SectionId.cinema;
  static const labels=<SectionId,String>{SectionId.cinema:'Cinema',SectionId.liveTv:'Live TV',SectionId.sources:'Sources',SectionId.resolvers:'Resolvers',SectionId.tools:'Tools / Providers',SectionId.optional:'System Diagnostics'};
  void openSettings(){Navigator.of(context).push(MaterialPageRoute(builder:(_)=>SectionSettingsScreen(settings:settings,onChanged:(id,enabled){setState((){if(!enabled&&selected==id)selected=SectionId.cinema;});}))).then((_){if(mounted)setState((){});});}
