@@ -3,7 +3,7 @@ import '../domain/models.dart';
 import '../domain/programme.dart';
 import 'live_provider.dart';
 
-/// Legal runtime smoke provider backed by Google's public sample media.
+/// Legal runtime smoke provider backed by a public MDN sample video.
 /// No scraping, credentials, DRM bypass, or restricted source is involved.
 final class LegalLiveDemoProvider implements LiveTvProvider {
   @override
@@ -14,6 +14,10 @@ final class LegalLiveDemoProvider implements LiveTvProvider {
     name: 'The Only Sample Channel',
     group: 'Public samples',
     epgId: 'sample-live',
+  );
+
+  static final Uri _sampleUri = Uri.parse(
+    'https://mdn.github.io/shared-assets/videos/flower.mp4',
   );
 
   @override
@@ -41,9 +45,7 @@ final class LegalLiveDemoProvider implements LiveTvProvider {
     if (channel.id != _channel.id) return const [];
     return [
       StreamSource(
-        uri: Uri.parse(
-          'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        ),
+        uri: _sampleUri,
         protocol: StreamProtocol.mp4,
         providerId: id,
         quality: 'sample',
