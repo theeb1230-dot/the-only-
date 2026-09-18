@@ -88,6 +88,27 @@ void main() {
     expect(await PersistentFavoritesRepository(store).all(), isEmpty);
   });
 
+
+  test('migrates schema v1 to current version without losing collections', () async {
+    SharedPreferences.setMockInitialValues({
+      'the_only.storage.schema': 1,
+      'the_only.v1.favorites':
+          '[{"id":"kept","title":"Kept Movie","kind":"movie"}]',
+    });
+    final preferences = await SharedPreferences.getInstance();
+    final store = PersistentLibraryStore(preferences);
+
+    await store.initialize();
+
+    expect(
+      preferences.getInt('the_only.storage.schema'),
+      PersistentLibraryStore.schemaVersion,
+    );
+    final favorites = await PersistentFavoritesRepository(store).all();
+    expect(favorites.single.id, 'kept');
+    expect(favorites.single.title, 'Kept Movie');
+  });
+
   test('future storage schema fails closed', () async {
     SharedPreferences.setMockInitialValues({'the_only.storage.schema': 999});
     final store = PersistentLibraryStore(await SharedPreferences.getInstance());

@@ -13,7 +13,7 @@ import 'library.dart';
 final class PersistentLibraryStore {
   PersistentLibraryStore(this.preferences);
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
   static const _schemaKey = 'the_only.storage.schema';
   static const _favoritesKey = 'the_only.v1.favorites';
   static const _historyKey = 'the_only.v1.history';
@@ -38,10 +38,29 @@ final class PersistentLibraryStore {
   }
 
   Future<void> _migrate(int from, int to) async {
-    // Schema v1 is the first persistent schema. Future migrations must be
-    // explicit and sequential here; never silently reinterpret stored data.
-    if (from == to) return;
-    throw StateError('Unsupported local storage migration: $from -> $to');
+    if (from < 1 || to > schemaVersion || from > to) {
+      throw StateError('Unsupported local storage migration: $from -> $to');
+    }
+
+    var current = from;
+    while (current < to) {
+      switch (current) {
+        case 1:
+          // v2 intentionally keeps the v1 collection payloads unchanged.
+          // The migration establishes an explicit sequential upgrade path so
+          // future schemas never silently reinterpret user-owned state.
+          current = 2;
+        default:
+          if (current < to) {
+            throw StateError(
+              'Unsupported local storage migration step: $current -> ${current + 1}',
+            );
+          }
+      }
+    }
+
+    final ok = await preferences.setInt(_schemaKey, to);
+    if (!ok) throw StateError('Could not persist local storage migration');
   }
 
   List<Object?> readList(String key) {
