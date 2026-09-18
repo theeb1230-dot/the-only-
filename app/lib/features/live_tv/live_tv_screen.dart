@@ -3,13 +3,24 @@ import 'package:flutter/material.dart';
 import '../../core/domain/live_channel.dart';
 import '../../core/domain/models.dart';
 import '../../core/domain/programme.dart';
+import '../../core/player/player_screen.dart';
 import 'live_tv_controller.dart';
 
+typedef LiveTvPlayerLauncher = Future<void> Function(
+  BuildContext context,
+  LiveChannel channel,
+  StreamSource source,
+);
+
 class LiveTvScreen extends StatefulWidget {
-  const LiveTvScreen({super.key, required this.controller, this.onWatch});
+  const LiveTvScreen({
+    super.key,
+    required this.controller,
+    this.playerLauncher,
+  });
 
   final LiveTvController controller;
-  final Future<void> Function(LiveChannel channel, StreamSource source)? onWatch;
+  final LiveTvPlayerLauncher? playerLauncher;
 
   @override
   State<LiveTvScreen> createState() => _LiveTvScreenState();
@@ -30,7 +41,10 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
   }
 
   Future<void> _loadChannels() async {
-    setState(() { _busy = true; _error = null; });
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       final channels = await widget.controller.channels();
       if (!mounted) return;
@@ -43,11 +57,21 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
   }
 
   Future<void> _open(LiveChannel channel) async {
-    setState(() { _busy = true; _error = null; _selected = channel; _guide = const []; _streams = const []; });
+    setState(() {
+      _busy = true;
+      _error = null;
+      _selected = channel;
+      _guide = const [];
+      _streams = const [];
+    });
     final now = DateTime.now();
     try {
       final results = await Future.wait([
-        widget.controller.guide(channel.epgId ?? channel.id, now.subtract(const Duration(hours: 2)), now.add(const Duration(hours: 12))),
+        widget.controller.guide(
+          channel.epgId ?? channel.id,
+          now.subtract(const Duration(hours: 2)),
+          now.add(const Duration(hours: 12)),
+        ),
         widget.controller.streams(channel),
       ]);
       if (!mounted) return;
@@ -62,6 +86,42 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
     }
   }
 
+  Future<void> _launchPlayer(
+    LiveChannel channel,
+    StreamSource source,
+  ) async {
+    final launcher = widget.playerLauncher;
+    if (launcher != null) {
+      await launcher(context, channel, source);
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlayerScreen(source: source, title: channel.name),
+      ),
+    );
+  }
+
+  Future<void> _watch(LiveChannel channel, StreamSource source) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final resolved = await widget.controller.resolveForWatch(channel, source);
+      if (!mounted) return;
+      if (resolved == null) {
+        setState(() => _error = 'Selected stream could not be resolved safely');
+        return;
+      }
+      await _launchPlayer(channel, resolved);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Live stream playback failed');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -71,7 +131,11 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
         Row(children: [
           Text('Live TV', style: Theme.of(context).textTheme.headlineSmall),
           const Spacer(),
-          IconButton(key: const Key('live-tv-refresh'), onPressed: _busy ? null : _loadChannels, icon: const Icon(Icons.refresh)),
+          IconButton(
+            key: const Key('live-tv-refresh'),
+            onPressed: _busy ? null : _loadChannels,
+            icon: const Icon(Icons.refresh),
+          ),
         ]),
         if (_busy) const LinearProgressIndicator(),
         if (_error != null) Text(_error!, key: const Key('live-tv-error')),
@@ -93,22 +157,29 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
             for (final programme in _guide.take(6))
               ListTile(
                 dense: true,
-                key: Key('live-programme-${programme.startsAt.millisecondsSinceEpoch}'),
+                key: Key(
+                  'live-programme-${programme.startsAt.millisecondsSinceEpoch}',
+                ),
                 title: Text(programme.title),
-                subtitle: Text('${programme.startsAt.toLocal()} – ${programme.endsAt.toLocal()}'),
+                subtitle: Text(
+                  '${programme.startsAt.toLocal()} – ${programme.endsAt.toLocal()}',
+                ),
               ),
           ],
           const SizedBox(height: 8),
           Text('Streams', style: Theme.of(context).textTheme.titleMedium),
-          if (_streams.isEmpty && !_busy) const Text('No playable streams available'),
+          if (_streams.isEmpty && !_busy)
+            const Text('No playable streams available'),
           for (var i = 0; i < _streams.length; i++)
             ListTile(
               key: Key('live-stream-$i'),
-              title: Text(_streams[i].quality ?? _streams[i].protocol.name.toUpperCase()),
+              title: Text(
+                _streams[i].quality ?? _streams[i].protocol.name.toUpperCase(),
+              ),
               subtitle: Text(_streams[i].providerId),
               trailing: FilledButton.icon(
                 key: Key('live-watch-$i'),
-                onPressed: widget.onWatch == null ? null : () => widget.onWatch!(channel, _streams[i]),
+                onPressed: _busy ? null : () => _watch(channel, _streams[i]),
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Watch'),
               ),
