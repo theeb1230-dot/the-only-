@@ -2,6 +2,16 @@ name: The Only Release Build
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish a GitHub Release only after TO-39 has passed'
+        required: true
+        default: false
+        type: boolean
+      golden_gate:
+        description: 'Type GOLDEN_COMPLETE only after the documented TO-39 audit passes'
+        required: false
+        type: string
   pull_request:
     paths:
       - 'app/**'
@@ -10,7 +20,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   android:
@@ -56,9 +66,6 @@ jobs:
           grep -q 'android.hardware.touchscreen.*false' android/app/src/main/AndroidManifest.xml
       - name: Build Android TV APK from clean platform state
         run: |
-          # The Mobile build populated Gradle/Flutter incremental outputs before the
-          # manifest was changed. Clear those outputs so the TV APK is guaranteed
-          # to repackage the TV manifest instead of reusing the Mobile artifact.
           flutter clean
           flutter pub get
           flutter build apk --release --dart-define=THE_ONLY_DEVICE=tv
@@ -156,17 +163,26 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.publish_release == true &&
+      inputs.golden_gate == 'GOLDEN_COMPLETE'
     needs: provenance
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: the-only-release-bundle
           path: release
+      - name: Refuse publication unless Golden gate is explicit
+        run: |
+          test "${{ inputs.publish_release }}" = "true"
+          test "${{ inputs.golden_gate }}" = "GOLDEN_COMPLETE"
       - name: Publish complete GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v0.1.0-build.${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" release/The-Only-Android-Mobile.apk release/The-Only-Android-TV.apk release/The-Only-iOS-UNSIGNED.ipa release/SHA256SUMS release/BUILD_PROVENANCE.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "The Only 0.1.0+1" --notes "Distinct Android Mobile + Android TV (LEANBACK) + iOS UNSIGNED/no-codesign built from exact commit $GITHUB_SHA. The iOS IPA requires signing before normal device installation. Android artifacts use the repository's documented debug signing configuration, not production signing."
+          TAG="v0.1.0-golden.${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" release/The-Only-Android-Mobile.apk release/The-Only-Android-TV.apk release/The-Only-iOS-UNSIGNED.ipa release/SHA256SUMS release/BUILD_PROVENANCE.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "The Only Golden 0.1.0+1" --notes "GOLDEN_COMPLETE gated release from exact commit $GITHUB_SHA. Distinct Android Mobile + Android TV (LEANBACK) + iOS UNSIGNED/no-codesign. The iOS IPA requires signing before normal device installation; Android signing state is recorded in BUILD_PROVENANCE.txt."

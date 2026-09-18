@@ -7,6 +7,7 @@ import 'core/providers/legal_demo_provider.dart';
 import 'core/providers/legal_live_demo_provider.dart';
 import 'core/providers/provider_health_store.dart';
 import 'core/providers/provider_registry.dart';
+import 'core/resolvers/direct_media_resolver.dart';
 import 'core/resolvers/resolver_coordinator.dart';
 import 'core/resolvers/resolver_registry.dart';
 import 'core/security/url_policy.dart';
@@ -50,18 +51,21 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
   final history = MemoryHistoryRepository();
   final downloads = MemoryDownloadsRepository();
   final health = ProviderHealthStore();
-  late final ResolverRegistry resolvers = ResolverRegistry(const []);
+  late final ResolverRegistry resolvers = ResolverRegistry(const [DirectMediaResolver()]);
+  late final ResolverCoordinator resolverCoordinator =
+      ResolverCoordinator(resolvers, const StreamValidator(UrlPolicy()));
   late final CinemaController cinema = CinemaController(
     providers: providers.all.toList(growable: false),
     favorites: favorites,
     history: history,
     downloads: downloads,
+    resolver: resolverCoordinator,
   );
   late final LiveTvController liveTv = LiveTvController([LegalLiveDemoProvider()]);
   late final SourcesController sources = SourcesController(providers);
   late final ResolversController resolverController = ResolversController(
     resolvers,
-    ResolverCoordinator(resolvers, const StreamValidator(UrlPolicy())),
+    resolverCoordinator,
   );
   late final ProvidersController providerTools = ProvidersController(providers, health, const []);
 

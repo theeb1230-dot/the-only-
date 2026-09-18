@@ -3,7 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:the_only/core/data/downloads.dart';
 import 'package:the_only/core/data/library.dart';
 import 'package:the_only/core/domain/models.dart';
+import 'package:the_only/core/domain/validation.dart';
 import 'package:the_only/core/providers/provider.dart';
+import 'package:the_only/core/resolvers/direct_media_resolver.dart';
+import 'package:the_only/core/resolvers/resolver_coordinator.dart';
+import 'package:the_only/core/resolvers/resolver_registry.dart';
+import 'package:the_only/core/security/url_policy.dart';
 import 'package:the_only/features/cinema/cinema_controller.dart';
 import 'package:the_only/features/cinema/cinema_screen.dart';
 
@@ -41,13 +46,24 @@ class FixtureDownloads implements DownloadsRepository {
 }
 
 void main() {
-  testWidgets('Cinema exposes separate search, watch, favorite and download actions', (tester) async {
+  testWidgets('Cinema exposes separate resolver-backed Watch and Download actions', (tester) async {
     final favorites = FixtureFavorites();
     final history = FixtureHistory();
     final downloads = FixtureDownloads();
-    final controller = CinemaController(providers: [FixtureProvider()], favorites: favorites, history: history, downloads: downloads);
+    final registry = ResolverRegistry(const [DirectMediaResolver()]);
+    final controller = CinemaController(
+      providers: [FixtureProvider()],
+      favorites: favorites,
+      history: history,
+      downloads: downloads,
+      resolver: ResolverCoordinator(registry, const StreamValidator(UrlPolicy())),
+    );
+    StreamSource? launched;
 
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CinemaScreen(controller: controller))));
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CinemaScreen(
+      controller: controller,
+      playerLauncher: (_, __, source) async { launched = source; },
+    ))));
     await tester.enterText(find.byKey(const Key('cinema-search-field')), 'fixture');
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
@@ -59,12 +75,14 @@ void main() {
 
     await tester.tap(find.byKey(const Key('cinema-item-movie-1')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('cinema-watch')), findsOneWidget);
+    expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
     expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('cinema-watch')));
-    await tester.pump();
+    await tester.tap(find.byKey(const Key('cinema-watch-0')));
+    await tester.pumpAndSettle();
     expect(history.entries, hasLength(1));
+    expect(launched, isNotNull);
+    expect(launched!.protocol, StreamProtocol.mp4);
     expect(downloads.jobs, isEmpty, reason: 'Watch must never implicitly queue a download');
 
     await tester.tap(find.byKey(const Key('cinema-download-0')));
