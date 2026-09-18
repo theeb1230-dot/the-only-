@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/data/in_memory_downloads.dart';
 import 'core/data/in_memory_library.dart';
 import 'core/domain/validation.dart';
+import 'core/providers/legal_demo_provider.dart';
 import 'core/providers/provider_health_store.dart';
 import 'core/providers/provider_registry.dart';
 import 'core/resolvers/resolver_coordinator.dart';
@@ -43,7 +44,7 @@ class TheOnlyShell extends StatefulWidget {
 
 class _TheOnlyShellState extends State<TheOnlyShell> {
   final SectionSettings settings = SectionSettings();
-  final ProviderRegistry providers = ProviderRegistry(const []);
+  final ProviderRegistry providers = ProviderRegistry([LegalDemoProvider()]);
   final favorites = MemoryFavoritesRepository();
   final history = MemoryHistoryRepository();
   final downloads = MemoryDownloadsRepository();
