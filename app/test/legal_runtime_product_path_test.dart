@@ -38,6 +38,7 @@ void main() {
       controller: controller,
       playerLauncher: (_, __, source) async { launched = source; },
     ))));
+    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Flower');
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.text('MDN Flower Sample'), findsOneWidget);
