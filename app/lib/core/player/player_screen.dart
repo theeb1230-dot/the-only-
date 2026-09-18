@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../domain/models.dart';
+import 'playback.dart';
+import 'protocol_adapters.dart';
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key, required this.source, required this.title});
@@ -15,27 +17,48 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   VideoPlayerController? _controller;
+  PlaybackCoordinator? _coordinator;
   Future<void>? _initialize;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    final controller = VideoPlayerController.networkUrl(widget.source.uri);
-    _controller = controller;
-    _initialize = _initializePlayer(controller);
+    _coordinator = PlaybackCoordinator(
+      standardPlaybackAdapters(
+        opener: _openSource,
+        stopper: _stopPlayback,
+      ),
+    );
+    _initialize = _initializePlayer();
   }
 
-  Future<void> _initializePlayer(VideoPlayerController controller) async {
+  Future<void> _initializePlayer() async {
     try {
-      await controller.initialize();
-      await controller.play();
+      await _coordinator!.open(widget.source);
       if (mounted) setState(() {});
+    } on UnsupportedError {
+      if (mounted) {
+        setState(() => _error = 'This source format is not supported by the native player.');
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _error = 'Playback failed. Try another source.');
       }
     }
+  }
+
+  Future<void> _openSource(StreamSource source) async {
+    final controller = VideoPlayerController.networkUrl(widget.source.uri);
+    _controller = controller;
+    await controller.initialize();
+    await controller.play();
+  }
+
+  Future<void> _stopPlayback() async {
+    final controller = _controller;
+    if (controller == null) return;
+    await controller.pause();
   }
 
   @override
