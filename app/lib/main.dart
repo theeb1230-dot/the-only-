@@ -28,7 +28,7 @@ Future<void> main() async { WidgetsFlutterBinding.ensureInitialized(); final p=a
 class TheOnlyApp extends StatelessWidget { const TheOnlyApp({super.key,required this.store}); final PersistentLibraryStore store; @override Widget build(BuildContext context)=>MaterialApp(debugShowCheckedModeBanner:false,title:'The Only',theme:ThemeData.dark(useMaterial3:true),home:TheOnlyShell(store:store)); }
 class TheOnlyShell extends StatefulWidget { const TheOnlyShell({super.key,required this.store}); final PersistentLibraryStore store; @override State<TheOnlyShell> createState()=>_TheOnlyShellState(); }
 class _TheOnlyShellState extends State<TheOnlyShell>{
- final SectionSettings settings=SectionSettings(); final ProviderRegistry providers=ProviderRegistry([LegalDemoProvider()]); final health=ProviderHealthStore();
+ late final SectionSettings settings=SectionSettings(preferences:widget.store.preferences); final ProviderRegistry providers=ProviderRegistry([LegalDemoProvider()]); final health=ProviderHealthStore();
  late final favorites=PersistentFavoritesRepository(widget.store); late final history=PersistentHistoryRepository(widget.store); late final downloads=PersistentDownloadsRepository(widget.store);
  late final ResolverRegistry resolvers=ResolverRegistry(const [DirectMediaResolver()]); late final ResolverCoordinator resolverCoordinator=ResolverCoordinator(resolvers,const StreamValidator(UrlPolicy()));
  late final CinemaController cinema=CinemaController(providers:providers.all.toList(growable:false),favorites:favorites,history:history,downloads:downloads,resolver:resolverCoordinator);
