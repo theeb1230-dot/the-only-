@@ -23,14 +23,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
     super.initState();
     final controller = VideoPlayerController.networkUrl(widget.source.uri);
     _controller = controller;
-    _initialize = controller.initialize().then((_) async {
+    _initialize = _initializePlayer(controller);
+  }
+
+  Future<void> _initializePlayer(VideoPlayerController controller) async {
+    try {
+      await controller.initialize();
       await controller.play();
       if (mounted) setState(() {});
-    }).catchError((Object error) {
+    } catch (_) {
       if (mounted) {
         setState(() => _error = 'Playback failed. Try another source.');
       }
-    });
+    }
   }
 
   @override
