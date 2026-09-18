@@ -2,8 +2,7 @@
 set -euo pipefail
 
 urls=(
-  "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-  "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+  "https://mdn.github.io/shared-assets/videos/flower.mp4"
 )
 
 for url in "${urls[@]}"; do
@@ -38,7 +37,7 @@ for url in "${urls[@]}"; do
   final_url="$(curl --silent --show-error --head --location --max-redirs 3 --connect-timeout 10 --max-time 30 \
     --proto '=https' --proto-redir '=https' --write-out '%{url_effective}' --output /dev/null "$url")"
   final_host="$(python3 -c 'import sys,urllib.parse; print(urllib.parse.urlsplit(sys.argv[1]).hostname)' "$final_url")"
-  if [[ "$final_host" != "storage.googleapis.com" ]]; then
+  if [[ "$final_host" != "mdn.github.io" ]]; then
     echo "Redirect escaped approved host: $final_host" >&2
     exit 1
   fi
