@@ -9,6 +9,7 @@ import 'core/providers/legal_demo_provider.dart';
 import 'core/providers/legal_live_demo_provider.dart';
 import 'core/providers/provider_health_store.dart';
 import 'core/providers/provider_registry.dart';
+import 'core/providers/product_provider_selector.dart';
 import 'core/resolvers/direct_media_resolver.dart';
 import 'core/resolvers/resolver_coordinator.dart';
 import 'core/resolvers/resolver_registry.dart';
@@ -33,9 +34,10 @@ class TheOnlyApp extends StatelessWidget { const TheOnlyApp({super.key,required 
 class TheOnlyShell extends StatefulWidget { const TheOnlyShell({super.key,required this.store}); final PersistentLibraryStore store; @override State<TheOnlyShell> createState()=>_TheOnlyShellState(); }
 class _TheOnlyShellState extends State<TheOnlyShell>{
  late final SectionSettings settings=SectionSettings(preferences:widget.store.preferences); final ProviderRegistry providers=ProviderRegistry([LegalDemoProvider()]); final health=ProviderHealthStore();
+ late final providerSelector=ProductProviderSelector(health:health,preferences:widget.store.preferences);
  late final favorites=PersistentFavoritesRepository(widget.store); late final history=PersistentHistoryRepository(widget.store); late final downloads=PersistentDownloadsRepository(widget.store);
  late final ResolverRegistry resolvers=ResolverRegistry(const [DirectMediaResolver()]); late final ResolverCoordinator resolverCoordinator=ResolverCoordinator(resolvers,const StreamValidator(UrlPolicy()));
- late final CinemaController cinema=CinemaController(providers:providers.all.toList(growable:false),favorites:favorites,history:history,downloads:downloads,resolver:resolverCoordinator);
+ late final CinemaController cinema=CinemaController(providers:providers.all.toList(growable:false),favorites:favorites,history:history,downloads:downloads,resolver:resolverCoordinator,providerSelector:providerSelector);
  late final LiveTvController liveTv=LiveTvController([LegalLiveDemoProvider()],resolver:resolverCoordinator);
  late final SourcesController sources=SourcesController(providers,resolver:resolverCoordinator,downloads:downloads); late final ResolversController resolverController=ResolversController(resolvers,resolverCoordinator);
  late final ProvidersController providerTools=ProvidersController(providers,health,const [],preferencesStore:widget.store.preferences); late final SystemDiagnosticsController diagnostics=SystemDiagnosticsController(RuntimeSystemSnapshotProvider());
