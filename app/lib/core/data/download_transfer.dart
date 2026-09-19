@@ -114,7 +114,7 @@ final class DownloadTransferService {
           if (_cancelled.contains(job.id)) throw const _DownloadCancelled();
           sink.add(chunk);
           received += chunk.length;
-          final progress = total > 0 ? (received / total).clamp(0.0, 1.0) : 0.0;
+          final progress = total > 0 ? (received / total).clamp(0.0, 1.0).toDouble() : 0.0;
           final bucket = (progress * 20).floor();
           if (bucket != lastPersisted) {
             lastPersisted = bucket;
