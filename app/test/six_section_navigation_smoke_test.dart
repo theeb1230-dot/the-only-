@@ -5,13 +5,13 @@ import 'package:the_only/core/data/persistent_library.dart';
 import 'package:the_only/main.dart';
 
 Future<void> tapDestination(WidgetTester tester, String label) async {
-  final nav = tester.widget<NavigationBar>(find.byType(NavigationBar));
-  final index = nav.destinations.indexWhere(
-    (destination) => destination is NavigationDestination && destination.label == label,
-  );
+  final navFinder = find.byType(NavigationBar);
+  expect(navFinder, findsOneWidget);
+  final nav = tester.widget<NavigationBar>(navFinder);
+  final index = nav.destinations.indexWhere((destination) => destination.label == label);
   expect(index, greaterThanOrEqualTo(0), reason: 'Missing navigation destination: $label');
   nav.onDestinationSelected?.call(index);
-  await tester.pumpAndSettle();
+  await tester.pump();
 }
 
 void main() {
@@ -20,22 +20,18 @@ void main() {
     final store = PersistentLibraryStore(await SharedPreferences.getInstance());
     await store.initialize();
     await tester.pumpWidget(TheOnlyApp(store: store));
+    await tester.pump();
 
     expect(find.byKey(const Key('cinema-screen')), findsOneWidget);
-
     await tapDestination(tester, 'Live TV');
     expect(find.byKey(const Key('live-tv-screen')), findsOneWidget);
-
     await tapDestination(tester, 'Sources');
     expect(find.byKey(const Key('sources-screen')), findsOneWidget);
-
     await tapDestination(tester, 'Resolvers');
     expect(find.byKey(const Key('resolvers-screen')), findsOneWidget);
-
     await tapDestination(tester, 'Tools / Providers');
     expect(find.byKey(const Key('providers-list')), findsOneWidget);
     expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
-
     await tapDestination(tester, 'System Diagnostics');
     expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
 
