@@ -22,9 +22,9 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-11 | Cinema details/list/seasons/episodes where applicable | IN_PROGRESS | deeper functional product path pending |
 | TO-12 | Cinema source selection + separate Watch | DONE | production Cinema UI exposes source selection and resolver-backed Watch; runtime product-path test proves resolved player launch |
 | TO-13 | Cinema separate Download + honest failure states | DONE | production Cinema keeps Download separate, rejects non-downloadable sources, and queues direct legal sources without Watch side effects |
-| TO-14 | Persistent Favorites | IN_PROGRESS | production SharedPreferences-backed repository exists and survives repository recreation in deterministic tests; app-restart/DEVICE evidence pending |
-| TO-15 | Persistent History/resume | IN_PROGRESS | production SharedPreferences-backed repository exists and preserves resume position across repository recreation; app-restart/DEVICE evidence pending |
-| TO-16 | Persistent legal Downloads manager | IN_PROGRESS | persistent queue/state repository exists; platform download execution and restart/DEVICE evidence pending |
+| TO-14 | Persistent Favorites | DONE | production SharedPreferences repository is wired into Cinema and a user-visible Library screen; recreation smoke proves persisted favorites render after store reconstruction |
+| TO-15 | Persistent History/resume | DONE | Watch persists history through production repository and Library renders saved resume position after store reconstruction |
+| TO-16 | Persistent legal Downloads manager | IN_PROGRESS | persistent queue/state is user-visible in Library and survives reconstruction; platform file-transfer execution remains pending |
 | TO-17 | Live TV provider/configuration + authorized channels | DONE | production shell registers the authorized public-sample Live provider and runtime UI test proves visible channel loading |
 | TO-18 | Live TV EPG now/next/list | DONE | Live TV UI loads channel details and renders provider programme data in the runtime product-path test |
 | TO-19 | Live TV stream selection/player/fallback | DONE | Live TV runtime path proves channel -> stream -> shared resolver -> player launch; provider failures/timeouts are isolated |
@@ -32,7 +32,7 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-21 | Resolvers diagnostics UI + real Watch integration | DONE | diagnostics resolution is wired by the production shell to PlayerScreen Watch and the persistent Download queue; unsupported/empty states remain explicit |
 | TO-22 | Tools/Providers registry/health/priority/preferences/diagnostics | DONE | production Tools consumes shared registry and exposes visible provider, bounded health probe, enablement/priority and persisted preferences; runtime smoke proves non-empty state |
 | TO-23 | Sixth interface clean-room + Feature Gate + functional runtime proof | DONE | exact-SHA license gate is REFERENCE_ONLY; independent local diagnostics UI is disabled by default, activatable in Settings, renders/refreshes real local runtime diagnostics, and uploads no telemetry |
-| TO-24 | Production persistent storage + migrations/versioning | IN_PROGRESS | SharedPreferences-backed schema v2 store, serialized writes, corruption fail-closed behavior and v1→v2 migration exist; real app restart/DEVICE evidence pending |
+| TO-24 | Production persistent storage + migrations/versioning | DONE | production shell initializes schema-v2 SharedPreferences store; serialized writes, fail-closed corruption/future schema, v1->v2 migration and reconstructed user-visible Library state are covered |
 | TO-25 | Player core HLS/MP4/DASH with platform-safe behavior | IN_PROGRESS | coordinator/adapters modeled; actual platform playback pending |
 | TO-26 | Legal embed/WebView last-resort fallback + host/navigation policy | IN_PROGRESS | policy/model work exists; runtime adapter proof pending |
 | TO-27 | Watch/Download separation end-to-end | DONE | Cinema and Sources runtime product-path tests prove Watch resolves/launches player without enqueueing Download, then explicit Download queues independently |
