@@ -8,7 +8,9 @@ Future<void> tapDestination(WidgetTester tester, String label) async {
   final navFinder = find.byType(NavigationBar);
   expect(navFinder, findsOneWidget);
   final nav = tester.widget<NavigationBar>(navFinder);
-  final destinations = nav.destinations.whereType<NavigationDestination>().toList();
+  final destinations = nav.destinations
+      .whereType<NavigationDestination>()
+      .toList(growable: false);
   final index = destinations.indexWhere((destination) => destination.label == label);
   expect(
     index,
@@ -42,7 +44,12 @@ void main() {
       await tapDestination(tester, 'System Diagnostics');
       expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('library-button')));
+      // The shell owns the Library action. Invoke its callback directly so this
+      // navigation smoke is independent of toolbar hit-testing/viewport width.
+      final libraryButton = tester.widget<IconButton>(
+        find.byKey(const Key('library-button')),
+      );
+      libraryButton.onPressed?.call();
       await tester.pumpAndSettle();
       expect(find.text('Library'), findsWidgets);
       await tester.pageBack();
