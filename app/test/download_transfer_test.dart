@@ -9,8 +9,6 @@ import 'package:the_only/core/domain/models.dart';
 import 'package:the_only/core/security/url_policy.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   late Directory directory;
   late HttpServer server;
 
