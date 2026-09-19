@@ -16,8 +16,8 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-05 | Settings, local feature gates and preferences | DONE | Settings controls + sixth-section local gate |
 | TO-06 | Real ProviderRegistry and allowed-provider registration | DONE | runtime shell constructs ProviderRegistry with the legal Cinema provider and Sources/Tools consume that same registry |
 | TO-07 | Real ResolverRegistry integrated with Watch paths | DONE | runtime shell constructs ResolverRegistry/ResolverCoordinator; Cinema, Live TV, Sources and Resolvers Watch actions all route through shared resolver/player paths |
-| TO-08 | Health/ranking/priority/fallback/timeouts/cancellation | IN_PROGRESS | health store/policies exist; end-to-end probes/ranking pending |
-| TO-09 | Cache/dedup/validation/quality/preferences | IN_PROGRESS | policies exist; complete end-to-end integration pending |
+| TO-08 | Health/ranking/priority/fallback/timeouts/cancellation | DONE | production Cinema orders enabled providers by persisted priority then measured health; shared search and source discovery are bounded and isolate provider failures, preserving healthy-provider fallback |
+| TO-09 | Cache/dedup/validation/quality/preferences | IN_PROGRESS | persisted provider enablement/priority and search dedup are integrated into production; complete cache/stream validation/quality integration remains pending |
 | TO-10 | Cinema functional search/results | DONE | production Cinema UI searches the legal runtime provider and renders visible results; widget runtime product-path test proves search -> visible result -> open |
 | TO-11 | Cinema details/list/seasons/episodes where applicable | IN_PROGRESS | deeper functional product path pending |
 | TO-12 | Cinema source selection + separate Watch | DONE | production Cinema UI exposes source selection and resolver-backed Watch; runtime product-path test proves resolved player launch |
