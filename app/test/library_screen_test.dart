@@ -22,7 +22,7 @@ void main() {
 
     store = PersistentLibraryStore(await SharedPreferences.getInstance());
     await store.initialize();
-    await tester.pumpWidget(MaterialApp(home:LibraryScreen(favorites:PersistentFavoritesRepository(store),history:PersistentHistoryRepository(store),downloads:PersistentDownloadsRepository(store))));
+    await tester.pumpWidget(MaterialApp(home:Scaffold(body:LibraryScreen(favorites:PersistentFavoritesRepository(store),history:PersistentHistoryRepository(store),downloads:PersistentDownloadsRepository(store)))));
     await tester.pumpAndSettle();
 
     expect(find.text('Persisted Movie'), findsNWidgets(2));
