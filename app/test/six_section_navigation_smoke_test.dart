@@ -4,6 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:the_only/core/data/persistent_library.dart';
 import 'package:the_only/main.dart';
 
+Future<void> tapDestination(WidgetTester tester, String label) async {
+  final destination = find.widgetWithText(NavigationDestination, label);
+  expect(destination, findsOneWidget, reason: 'Missing navigation destination: $label');
+  await tester.ensureVisible(destination);
+  await tester.tap(destination);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('all enabled product sections navigate in one shell and library back preserves state', (tester) async {
     SharedPreferences.setMockInitialValues({'the_only.section.optional': true});
@@ -13,25 +21,20 @@ void main() {
 
     expect(find.byKey(const Key('cinema-screen')), findsOneWidget);
 
-    await tester.tap(find.text('Live TV').last);
-    await tester.pumpAndSettle();
+    await tapDestination(tester, 'Live TV');
     expect(find.byKey(const Key('live-tv-screen')), findsOneWidget);
 
-    await tester.tap(find.text('Sources').last);
-    await tester.pumpAndSettle();
+    await tapDestination(tester, 'Sources');
     expect(find.byKey(const Key('sources-screen')), findsOneWidget);
 
-    await tester.tap(find.text('Resolvers').last);
-    await tester.pumpAndSettle();
+    await tapDestination(tester, 'Resolvers');
     expect(find.byKey(const Key('resolvers-screen')), findsOneWidget);
 
-    await tester.tap(find.text('Tools / Providers').last);
-    await tester.pumpAndSettle();
+    await tapDestination(tester, 'Tools / Providers');
     expect(find.byKey(const Key('providers-list')), findsOneWidget);
     expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
 
-    await tester.tap(find.text('System Diagnostics').last);
-    await tester.pumpAndSettle();
+    await tapDestination(tester, 'System Diagnostics');
     expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('library-button')));
