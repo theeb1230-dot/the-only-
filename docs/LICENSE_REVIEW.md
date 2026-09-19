@@ -14,6 +14,7 @@ Public availability is not permission to redistribute or incorporate code. Licen
 | URL resolution | ResolveURL | `7841296a564bf0d6cb301e8e4b6bed1a1201dc88` | GPL v2 | REFERENCE_ONLY_GPL2 | independent implementation only |
 | Native in-app playback | Flutter `video_player` | package `2.14.0` | BSD-3-Clause | CLEARED_BSD3 | dependency use with notices |
 | Local preferences persistence | Flutter `shared_preferences` | package `2.5.5` | BSD-3-Clause | CLEARED_BSD3 | non-secret local state only |
+| App-owned file storage paths | Flutter `path_provider` | package `2.1.5` | BSD-3-Clause | CLEARED_BSD3 | app support directory resolution for legal offline files |
 | Sixth section | source #14 from archive manifest | `a92d63c0a542ba37370bb14a026b5cc227e1165d` | recursive exact-SHA tree contains no LICENSE/NOTICE; README grants no license | REFERENCE_ONLY | clean-room behavior only; no source copying; local gate disabled by default |
 | Android/ADB tooling | Electron-ADB-ToolKit | archived | out of product | OUT_OF_PRODUCT | archive/reference only |
 | Desktop/hardware projects | DeskEngine, XStat, Rainity projects | archived | out of product | OUT_OF_PRODUCT | archive/reference only |

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../core/data/download_transfer.dart';
 import '../../core/data/downloads.dart';
 import '../../core/data/library.dart';
 
 class LibraryScreen extends StatefulWidget {
-  const LibraryScreen({super.key, required this.favorites, required this.history, required this.downloads});
+  const LibraryScreen({super.key, required this.favorites, required this.history, required this.downloads, this.transfer});
   final FavoritesRepository favorites;
   final HistoryRepository history;
   final DownloadsRepository downloads;
+  final DownloadTransferService? transfer;
 
   @override
   State<LibraryScreen> createState() => _LibraryScreenState();
@@ -15,6 +17,14 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _refresh() async => setState(() {});
+
+  Future<void> _start(DownloadJob job) async {
+    final transfer = widget.transfer;
+    if (transfer == null) return;
+    setState(() {});
+    await transfer.start(job);
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
@@ -49,7 +59,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
           builder: (context, snapshot) {
             final jobs = snapshot.data ?? const <DownloadJob>[];
             if (jobs.isEmpty) return const ListTile(key: Key('downloads-empty'), title: Text('No downloads queued'));
-            return Column(children: [for (final job in jobs) ListTile(key: Key('download-${job.id}'), title: Text(job.source.uri.pathSegments.isEmpty ? job.id : job.source.uri.pathSegments.last), subtitle: Text(job.state.name), trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async { await widget.downloads.remove(job.id); await _refresh(); }))]);
+            return Column(children: [
+              for (final job in jobs)
+                ListTile(
+                  key: Key('download-${job.id}'),
+                  title: Text(job.source.uri.pathSegments.isEmpty ? job.id : job.source.uri.pathSegments.last),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(job.state == DownloadState.running ? 'Downloading ${(job.progress * 100).round()}%' : job.state.name),
+                      if (job.state == DownloadState.running) LinearProgressIndicator(value: job.progress > 0 ? job.progress : null),
+                      if (job.error != null) Text(job.error!, key: Key('download-error-${job.id}')),
+                      if (job.state == DownloadState.completed && job.localPath != null) const Text('Saved for offline playback'),
+                    ],
+                  ),
+                  trailing: Wrap(
+                    children: [
+                      if (widget.transfer != null && {DownloadState.queued, DownloadState.failed, DownloadState.cancelled, DownloadState.paused}.contains(job.state))
+                        IconButton(key: Key('download-start-${job.id}'), tooltip: 'Start / Retry', icon: const Icon(Icons.download), onPressed: () => _start(job)),
+                      if (widget.transfer != null && job.state == DownloadState.running)
+                        IconButton(key: Key('download-cancel-${job.id}'), tooltip: 'Cancel', icon: const Icon(Icons.cancel_outlined), onPressed: () { widget.transfer!.cancel(job.id); }),
+                      IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async { widget.transfer?.cancel(job.id); await widget.downloads.remove(job.id); await _refresh(); }),
+                    ],
+                  ),
+                ),
+            ]);
           },
         ),
       ],

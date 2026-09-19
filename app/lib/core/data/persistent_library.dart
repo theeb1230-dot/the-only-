@@ -157,6 +157,9 @@ final class PersistentDownloadsRepository implements DownloadsRepository {
   }
 
   @override
+  Future<void> update(DownloadJob job) => enqueue(job);
+
+  @override
   Future<void> remove(String id) async {
     final current = (await all()).where((job) => job.id != id).toList();
     await store.writeList(store.downloadsKey, current.map(_downloadToJson).toList());
@@ -231,6 +234,9 @@ Map<String, Object?> _downloadToJson(DownloadJob job) => {
       'id': job.id,
       'source': _sourceToJson(job.source),
       'state': job.state.name,
+      'progress': job.progress,
+      if (job.localPath != null) 'localPath': job.localPath,
+      if (job.error != null) 'error': job.error,
     };
 
 DownloadJob? _downloadFromJson(Object? value) {
@@ -238,9 +244,19 @@ DownloadJob? _downloadFromJson(Object? value) {
   final id = value['id'];
   final source = _sourceFromJson(value['source']);
   final state = value['state'];
+  final progress = value['progress'];
+  final localPath = value['localPath'];
+  final error = value['error'];
   if (id is! String || source == null || state is! String) return null;
   try {
-    return DownloadJob(id: id, source: source, state: DownloadState.values.byName(state));
+    return DownloadJob(
+      id: id,
+      source: source,
+      state: DownloadState.values.byName(state),
+      progress: progress is num ? progress.toDouble().clamp(0, 1).toDouble() : 0,
+      localPath: localPath is String ? localPath : null,
+      error: error is String ? error : null,
+    );
   } on ArgumentError {
     return null;
   }

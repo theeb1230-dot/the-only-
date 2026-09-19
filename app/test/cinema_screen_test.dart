@@ -42,6 +42,7 @@ class FixtureDownloads implements DownloadsRepository {
   final jobs = <DownloadJob>[];
   @override Future<List<DownloadJob>> all() async => jobs;
   @override Future<void> enqueue(DownloadJob job) async => jobs.add(job);
+  @override Future<void> update(DownloadJob job) async { jobs.removeWhere((item) => item.id == job.id); jobs.add(job); }
   @override Future<void> remove(String id) async => jobs.removeWhere((job) => job.id == id);
 }
 
