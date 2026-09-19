@@ -49,10 +49,23 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Future<void> _openSource(StreamSource source) async {
-    final controller = VideoPlayerController.networkUrl(widget.source.uri);
+    // Always open the source selected by the playback coordinator. Using the
+    // original widget source here would silently bypass adapter/fallback source
+    // selection and could make a successful resolution play the wrong URI.
+    final previous = _controller;
+    final controller = VideoPlayerController.networkUrl(source.uri);
     _controller = controller;
-    await controller.initialize();
-    await controller.play();
+    try {
+      await controller.initialize();
+      await controller.play();
+    } catch (_) {
+      if (identical(_controller, controller)) _controller = previous;
+      await controller.dispose();
+      rethrow;
+    }
+    if (previous != null && !identical(previous, controller)) {
+      await previous.dispose();
+    }
   }
 
   Future<void> _stopPlayback() async {
