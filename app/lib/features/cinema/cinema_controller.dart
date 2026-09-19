@@ -64,6 +64,13 @@ class CinemaController {
 
   Future<void> favorite(MediaItem item)=>favorites.add(item);
   Future<MediaRequest> watch(MediaItem item) async { await history.save(HistoryEntry(item:item,position:Duration.zero,updatedAt:DateTime.now().toUtc())); return MediaRequest(item:item,action:MediaAction.watch); }
-  Future<StreamSource?> resolveForWatch(MediaItem item,StreamSource source) async { await watch(item); final activeResolver=resolver; if(activeResolver==null)return null; final resolved=await activeResolver.resolve(source.uri); return resolved.where(streamValidator.isValid).cast<StreamSource?>().firstOrNull; }
+  Future<StreamSource?> resolveForWatch(MediaItem item,StreamSource source) async {
+    await watch(item);
+    final activeResolver=resolver;
+    if(activeResolver==null)return null;
+    final resolved=await activeResolver.resolve(source.uri);
+    for(final candidate in resolved){if(streamValidator.isValid(candidate))return candidate;}
+    return null;
+  }
   Future<DownloadJob> download(MediaItem item,StreamSource source) async { if(!streamValidator.isValid(source))throw StateError('Selected source failed security validation'); if(!isDownloadable(source))throw StateError('Selected source is not directly downloadable'); final job=DownloadJob(id:'${item.kind.name}:${item.id}:${source.uri}',source:source,state:DownloadState.queued); await downloads.enqueue(job); return job; }
 }
