@@ -31,3 +31,11 @@ This ledger records third-party licensing relevant to The Only. Archive retentio
 
 ## No-license sources
 Cinema-HQ, PyEmbed-Api, and M3U-XCAPI-EPG-IPTV-Stremio had no root LICENSE/NOTICE in the exact revisions inspected. They remain reference-only; The Only uses clean-room implementations based on public behavior and its own contracts.
+
+
+## Flutter path_provider
+- Package: `path_provider` from publisher `flutter.dev`.
+- Product dependency range: `^2.1.5`.
+- License: BSD-3-Clause, copyright The Flutter Authors.
+- Obligation: retain the copyright notice, redistribution conditions, and disclaimer in source/binary distributions as required by the license.
+- Current product use: resolves app-owned support storage for legal offline media files; it does not expose or store provider credentials.
