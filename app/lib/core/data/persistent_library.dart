@@ -253,7 +253,7 @@ DownloadJob? _downloadFromJson(Object? value) {
       id: id,
       source: source,
       state: DownloadState.values.byName(state),
-      progress: progress is num ? progress.toDouble().clamp(0, 1) : 0,
+      progress: progress is num ? progress.toDouble().clamp(0, 1).toDouble() : 0,
       localPath: localPath is String ? localPath : null,
       error: error is String ? error : null,
     );
