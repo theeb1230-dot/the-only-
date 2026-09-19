@@ -16,12 +16,12 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-05 | Settings, local feature gates and preferences | DONE | Settings controls + sixth-section local gate |
 | TO-06 | Real ProviderRegistry and allowed-provider registration | DONE | runtime shell constructs ProviderRegistry with the legal Cinema provider and Sources/Tools consume that same registry |
 | TO-07 | Real ResolverRegistry integrated with Watch paths | DONE | runtime shell constructs ResolverRegistry/ResolverCoordinator; Cinema, Live TV, Sources and Resolvers Watch actions all route through shared resolver/player paths |
-| TO-08 | Health/ranking/priority/fallback/timeouts/cancellation | IN_PROGRESS | health store/policies exist; end-to-end probes/ranking pending |
-| TO-09 | Cache/dedup/validation/quality/preferences | IN_PROGRESS | policies exist; complete end-to-end integration pending |
+| TO-08 | Health/ranking/priority/fallback/timeouts/cancellation | DONE | production Cinema consumes persisted enablement/priority plus measured health ordering; bounded provider operations isolate failures and retain healthy fallback |
+| TO-09 | Cache/dedup/validation/quality/preferences | DONE | production Cinema source path applies fail-closed StreamValidator, source dedup, quality ranking, persisted provider preferences, and TTL source caching; regression proves unsafe rejection, ranking, fresh reuse and expiry |
 | TO-10 | Cinema functional search/results | DONE | production Cinema UI searches the legal runtime provider and renders visible results; widget runtime product-path test proves search -> visible result -> open |
 | TO-11 | Cinema details/list/seasons/episodes where applicable | IN_PROGRESS | deeper functional product path pending |
 | TO-12 | Cinema source selection + separate Watch | DONE | production Cinema UI exposes source selection and resolver-backed Watch; runtime product-path test proves resolved player launch |
-| TO-13 | Cinema separate Download + honest failure states | DONE | production Cinema keeps Download separate, rejects non-downloadable sources, and queues direct legal sources without Watch side effects |
+| TO-13 | Cinema separate Download + honest failure states | DONE | production Cinema keeps Download separate, rejects non-downloadable or security-invalid sources, and queues direct legal sources without Watch side effects |
 | TO-14 | Persistent Favorites | DONE | production SharedPreferences repository is wired into Cinema and a user-visible Library screen; recreation smoke proves persisted favorites render after store reconstruction |
 | TO-15 | Persistent History/resume | DONE | Watch persists history through production repository and Library renders saved resume position after store reconstruction |
 | TO-16 | Persistent legal Downloads manager | IN_PROGRESS | persistent queue/state is user-visible in Library and survives reconstruction; platform file-transfer execution remains pending |
