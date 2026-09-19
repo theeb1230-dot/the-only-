@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:the_only/core/data/downloads.dart';
+import 'package:the_only/core/data/in_memory_downloads.dart';
 import 'package:the_only/core/domain/models.dart';
 import 'package:the_only/core/domain/validation.dart';
 import 'package:the_only/core/providers/provider.dart';
