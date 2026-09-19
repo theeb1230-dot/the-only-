@@ -36,3 +36,7 @@ class UrlPolicy {
   bool _isLoopback(String host) =>
       host == 'localhost' || host == '127.0.0.1' || host == '::1';
 }
+
+/// Returns a credential-safe diagnostic form of a URI. Query, fragment and
+/// user-info are intentionally discarded so logs cannot leak tokens/secrets.
+String sanitizedUriForLog(Uri uri) => Uri(scheme: uri.scheme, host: uri.host, port: uri.hasPort ? uri.port : null, path: uri.path).toString();

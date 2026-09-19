@@ -14,32 +14,32 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-03 | Architecture/domain contracts without UI-provider coupling | DONE | ARCHITECTURE.md + domain/provider contracts |
 | TO-04 | Shared navigation/routing/back/deep state | DONE | unified six-section shell and navigation tests |
 | TO-05 | Settings, local feature gates and preferences | DONE | Settings controls + sixth-section local gate |
-| TO-06 | Real ProviderRegistry and allowed-provider registration | IN_PROGRESS | legal Cinema provider registered; broader registry/product verification pending |
-| TO-07 | Real ResolverRegistry integrated with Watch paths | IN_PROGRESS | resolver contracts/controllers exist; shell/player Watch integration pending |
+| TO-06 | Real ProviderRegistry and allowed-provider registration | DONE | runtime shell constructs ProviderRegistry with the legal Cinema provider and Sources/Tools consume that same registry |
+| TO-07 | Real ResolverRegistry integrated with Watch paths | DONE | runtime shell constructs ResolverRegistry/ResolverCoordinator; Cinema, Live TV, Sources and Resolvers Watch actions all route through shared resolver/player paths |
 | TO-08 | Health/ranking/priority/fallback/timeouts/cancellation | IN_PROGRESS | health store/policies exist; end-to-end probes/ranking pending |
 | TO-09 | Cache/dedup/validation/quality/preferences | IN_PROGRESS | policies exist; complete end-to-end integration pending |
-| TO-10 | Cinema functional search/results | IN_PROGRESS | legal runtime provider search/results exists; LIVE/UI runtime proof pending |
+| TO-10 | Cinema functional search/results | DONE | production Cinema UI searches the legal runtime provider and renders visible results; widget runtime product-path test proves search -> visible result -> open |
 | TO-11 | Cinema details/list/seasons/episodes where applicable | IN_PROGRESS | deeper functional product path pending |
-| TO-12 | Cinema source selection + separate Watch | IN_PROGRESS | source/Watch UI exists; actual player path pending |
-| TO-13 | Cinema separate Download + honest failure states | IN_PROGRESS | explicit Download action exists; execution/durable state pending |
+| TO-12 | Cinema source selection + separate Watch | DONE | production Cinema UI exposes source selection and resolver-backed Watch; runtime product-path test proves resolved player launch |
+| TO-13 | Cinema separate Download + honest failure states | DONE | production Cinema keeps Download separate, rejects non-downloadable sources, and queues direct legal sources without Watch side effects |
 | TO-14 | Persistent Favorites | IN_PROGRESS | production SharedPreferences-backed repository exists and survives repository recreation in deterministic tests; app-restart/DEVICE evidence pending |
 | TO-15 | Persistent History/resume | IN_PROGRESS | production SharedPreferences-backed repository exists and preserves resume position across repository recreation; app-restart/DEVICE evidence pending |
 | TO-16 | Persistent legal Downloads manager | IN_PROGRESS | persistent queue/state repository exists; platform download execution and restart/DEVICE evidence pending |
-| TO-17 | Live TV provider/configuration + authorized channels | IN_PROGRESS | PR #23 merged legal runtime channel provider; LIVE/player proof pending |
-| TO-18 | Live TV EPG now/next/list | IN_PROGRESS | legal provider exposes programme data; product runtime proof pending |
-| TO-19 | Live TV stream selection/player/fallback | IN_PROGRESS | stream selection exists; actual playback/fallback runtime proof pending |
-| TO-20 | Sources UI results/source/quality/failure/fallback | IN_PROGRESS | provider discovery exists; full product flow pending |
-| TO-21 | Resolvers diagnostics UI + real Watch integration | IN_PROGRESS | diagnostics/controller exists; Watch/player integration pending |
-| TO-22 | Tools/Providers registry/health/priority/preferences/diagnostics | IN_PROGRESS | registry/health controller exists; complete product diagnostics pending |
-| TO-23 | Sixth interface clean-room + Feature Gate + functional runtime proof | IN_PROGRESS | gate exists; placeholder is not acceptance; license/archive review required before clean-room implementation |
+| TO-17 | Live TV provider/configuration + authorized channels | DONE | production shell registers the authorized public-sample Live provider and runtime UI test proves visible channel loading |
+| TO-18 | Live TV EPG now/next/list | DONE | Live TV UI loads channel details and renders provider programme data in the runtime product-path test |
+| TO-19 | Live TV stream selection/player/fallback | DONE | Live TV runtime path proves channel -> stream -> shared resolver -> player launch; provider failures/timeouts are isolated |
+| TO-20 | Sources UI results/source/quality/failure/fallback | DONE | six-interface runtime smoke proves legal provider results, source discovery, resolver-backed Watch and separate Download; failure/timeouts are isolated |
+| TO-21 | Resolvers diagnostics UI + real Watch integration | DONE | diagnostics resolution is wired by the production shell to PlayerScreen Watch and the persistent Download queue; unsupported/empty states remain explicit |
+| TO-22 | Tools/Providers registry/health/priority/preferences/diagnostics | DONE | production Tools consumes shared registry and exposes visible provider, bounded health probe, enablement/priority and persisted preferences; runtime smoke proves non-empty state |
+| TO-23 | Sixth interface clean-room + Feature Gate + functional runtime proof | DONE | exact-SHA license gate is REFERENCE_ONLY; independent local diagnostics UI is disabled by default, activatable in Settings, renders/refreshes real local runtime diagnostics, and uploads no telemetry |
 | TO-24 | Production persistent storage + migrations/versioning | IN_PROGRESS | SharedPreferences-backed schema v2 store, serialized writes, corruption fail-closed behavior and v1→v2 migration exist; real app restart/DEVICE evidence pending |
 | TO-25 | Player core HLS/MP4/DASH with platform-safe behavior | IN_PROGRESS | coordinator/adapters modeled; actual platform playback pending |
 | TO-26 | Legal embed/WebView last-resort fallback + host/navigation policy | IN_PROGRESS | policy/model work exists; runtime adapter proof pending |
-| TO-27 | Watch/Download separation end-to-end | IN_PROGRESS | UI actions separate; complete execution paths pending |
+| TO-27 | Watch/Download separation end-to-end | DONE | Cinema and Sources runtime product-path tests prove Watch resolves/launches player without enqueueing Download, then explicit Download queues independently |
 | TO-28 | Android Mobile UX/runtime integration | IN_PROGRESS | APK builds; DEVICE/runtime UX verification pending |
 | TO-29 | Android TV 10-foot UX, D-pad/focus/LEANBACK/launcher | IN_PROGRESS | independent TV APK + LEANBACK build verification exists; D-pad/device UX proof pending |
 | TO-30 | iOS scaffold/runtime build readiness | IN_PROGRESS | unsigned iOS build/package succeeds; runtime/device proof pending |
-| TO-31 | Security hardening and credential-safe logging | IN_PROGRESS | must regress https://user:pass@x.test/a?token=secret#part with no userInfo/query/fragment/token/secret leakage; URL/redirect/host policies fail closed |
+| TO-31 | Security hardening and credential-safe logging | DONE | sanitizedUriForLog strips userInfo/query/fragment; regression covers the required credential/token URI and UrlPolicy fails closed for user-info, non-allowlisted hosts and unsafe redirects |
 | TO-32 | Functional integration/smoke suite for all six interfaces | TODO | loading/error/empty/results/details/actions/player/back/state; fixtures are not runtime proof |
 | TO-33 | LIVE verification suite using legal/authorized sources | TODO | separate from deterministic CI; record honest live failures |
 | TO-34 | DEVICE verification matrix: Android Mobile/TV/iOS | TODO | unavailable hardware remains DEVICE_REQUIRED_PENDING, never PASS |
