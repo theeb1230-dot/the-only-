@@ -144,6 +144,11 @@ final class DownloadTransferService {
       return current;
     } catch (_) {
       if (await file.exists()) await file.delete();
+      if (_cancelled.contains(job.id)) {
+        current = current.copyWith(state: DownloadState.cancelled, progress: 0, error: 'Download cancelled.');
+        await repository.update(current);
+        return current;
+      }
       current = current.copyWith(state: DownloadState.failed, progress: 0, error: 'Download failed. Retry when the connection is available.');
       await repository.update(current);
       return current;
