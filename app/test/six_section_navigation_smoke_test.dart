@@ -11,7 +11,9 @@ Future<void> tapDestination(WidgetTester tester, String label) async {
   final destinations = nav.destinations
       .whereType<NavigationDestination>()
       .toList(growable: false);
-  final index = destinations.indexWhere((destination) => destination.label == label);
+  final index = destinations.indexWhere(
+    (destination) => destination.label == label,
+  );
   expect(
     index,
     greaterThanOrEqualTo(0),
@@ -25,8 +27,16 @@ void main() {
   testWidgets(
     'all enabled product sections navigate in one shell and library back preserves state',
     (tester) async {
-      SharedPreferences.setMockInitialValues({'the_only.section.optional': true});
-      final store = PersistentLibraryStore(await SharedPreferences.getInstance());
+      // SectionSettings persists feature gates as
+      // the_only.section.enabled.<section>. Keep the optional clean-room
+      // surface disabled by default in production and enable it explicitly
+      // only for this deterministic smoke.
+      SharedPreferences.setMockInitialValues({
+        'the_only.section.enabled.optional': true,
+      });
+      final store = PersistentLibraryStore(
+        await SharedPreferences.getInstance(),
+      );
       await store.initialize();
       await tester.pumpWidget(TheOnlyApp(store: store));
       await tester.pump();
@@ -42,10 +52,11 @@ void main() {
       expect(find.byKey(const Key('providers-list')), findsOneWidget);
       expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
       await tapDestination(tester, 'System Diagnostics');
-      expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
+      expect(
+        find.byKey(const Key('system-diagnostics-screen')),
+        findsOneWidget,
+      );
 
-      // The shell owns the Library action. Invoke its callback directly so this
-      // navigation smoke is independent of toolbar hit-testing/viewport width.
       final libraryButton = tester.widget<IconButton>(
         find.byKey(const Key('library-button')),
       );
@@ -54,7 +65,10 @@ void main() {
       expect(find.text('Library'), findsWidgets);
       await tester.pageBack();
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
+      expect(
+        find.byKey(const Key('system-diagnostics-screen')),
+        findsOneWidget,
+      );
     },
   );
 }
