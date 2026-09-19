@@ -1,6 +1,8 @@
 import 'models.dart';
 
-bool isDownloadable(StreamSource source) =>
-    source.protocol == StreamProtocol.mp4 ||
-    source.protocol == StreamProtocol.hls ||
-    source.protocol == StreamProtocol.dash;
+/// Offline file transfer currently supports direct MP4 assets only.
+///
+/// HLS/DASH are playable but are segmented manifests, not single downloadable
+/// media files. They stay out of Download until an explicit offline packaging
+/// implementation can preserve segments/manifests correctly.
+bool isDownloadable(StreamSource source) => source.protocol == StreamProtocol.mp4;
