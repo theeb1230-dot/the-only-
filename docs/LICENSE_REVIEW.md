@@ -13,6 +13,7 @@ Public availability is not permission to redistribute or incorporate code. Licen
 | IPTV/M3U/XCAPI/EPG | M3U-XCAPI-EPG-IPTV-Stremio | `2d15db6e9f6c4f70258f8ed88fd9203cb0f5c907` | no LICENSE/NOTICE | REFERENCE_ONLY | clean-room behavior only |
 | URL resolution | ResolveURL | `7841296a564bf0d6cb301e8e4b6bed1a1201dc88` | GPL v2 | REFERENCE_ONLY_GPL2 | independent implementation only |
 | Native in-app playback | Flutter `video_player` | package `2.14.0` | BSD-3-Clause | CLEARED_BSD3 | dependency use with notices |
+| Legal in-app embed fallback | Flutter `webview_flutter` | package `4.13.0` | BSD-3-Clause | CLEARED_BSD3 | last-resort in-app rendering only with explicit legal host allowlist and fail-closed navigation |
 | Local preferences persistence | Flutter `shared_preferences` | package `2.5.5` | BSD-3-Clause | CLEARED_BSD3 | non-secret local state only |
 | App-owned file storage paths | Flutter `path_provider` | package `2.1.5` | BSD-3-Clause | CLEARED_BSD3 | app support directory resolution for legal offline files |
 | Sixth section | source #14 from archive manifest | `a92d63c0a542ba37370bb14a026b5cc227e1165d` | recursive exact-SHA tree contains no LICENSE/NOTICE; README grants no license | REFERENCE_ONLY | clean-room behavior only; no source copying; local gate disabled by default |
@@ -24,4 +25,4 @@ Public availability is not permission to redistribute or incorporate code. Licen
 Record exact SHA, license filename/text, SPDX identifier when determinable, copyright/notice obligations, redistribution/modification conditions, dependency-license concerns, and a final reuse decision.
 
 ## Current implementation rule
-Cinema and Live TV are clean-room. ResolveURL/PyEmbed behavior remains independently implemented behind contracts. Native playback and local persistence retain their package notices. The sixth interface is an independent clean-room local diagnostics implementation based only on generic observable capability categories; no source #14 code, identifiers, assets, or protected implementation expression are copied.
+Cinema and Live TV are clean-room. ResolveURL/PyEmbed behavior remains independently implemented behind contracts. Native playback and local persistence retain their package notices. Embed fallback is independent product code and is never used to bypass DRM, paywalls, CAPTCHA, authentication, or host policy. The sixth interface is an independent clean-room local diagnostics implementation based only on generic observable capability categories; no source #14 code, identifiers, assets, or protected implementation expression are copied.
