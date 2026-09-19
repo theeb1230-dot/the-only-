@@ -27,7 +27,8 @@ void main() {
 
     await tester.tap(find.text('Tools / Providers').last);
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('providers-screen')), findsOneWidget);
+    expect(find.byKey(const Key('providers-list')), findsOneWidget);
+    expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
 
     await tester.tap(find.text('System Diagnostics').last);
     await tester.pumpAndSettle();
