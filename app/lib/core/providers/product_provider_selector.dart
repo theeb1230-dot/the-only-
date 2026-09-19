@@ -1,7 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../settings/provider_preferences.dart';
-import 'health.dart';
 import 'provider.dart';
 import 'provider_health_store.dart';
 
