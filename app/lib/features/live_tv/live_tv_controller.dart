@@ -5,16 +5,21 @@ import '../../core/providers/live_provider.dart';
 import '../../core/resolvers/resolver_coordinator.dart';
 
 class LiveTvController {
-  LiveTvController(this.providers, {required this.resolver});
+  LiveTvController(
+    this.providers, {
+    required this.resolver,
+    this.providerTimeout = const Duration(seconds: 5),
+  });
 
   final List<LiveTvProvider> providers;
   final ResolverCoordinator resolver;
+  final Duration providerTimeout;
 
   Future<List<LiveChannel>> channels() async {
     final result = <String, LiveChannel>{};
     for (final provider in providers) {
       try {
-        for (final channel in await provider.channels()) {
+        for (final channel in await provider.channels().timeout(providerTimeout)) {
           result.putIfAbsent('${channel.name.toLowerCase()}|${channel.group ?? ''}', () => channel);
         }
       } catch (_) {}
@@ -26,7 +31,9 @@ class LiveTvController {
     final guide = <Programme>[];
     for (final provider in providers) {
       try {
-        guide.addAll(await provider.programmes(channelId, from, to));
+        guide.addAll(
+          await provider.programmes(channelId, from, to).timeout(providerTimeout),
+        );
       } catch (_) {}
     }
     guide.sort((a, b) => a.startsAt.compareTo(b.startsAt));
@@ -37,7 +44,7 @@ class LiveTvController {
     final streams = <StreamSource>[];
     for (final provider in providers) {
       try {
-        streams.addAll(await provider.streams(channel));
+        streams.addAll(await provider.streams(channel).timeout(providerTimeout));
       } catch (_) {}
     }
     return streams;
