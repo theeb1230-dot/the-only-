@@ -15,6 +15,7 @@ on:
   pull_request:
     paths:
       - 'app/**'
+      - 'tools/**'
       - '.github/workflows/release-build.yml'
   push:
     branches: [ main ]
