@@ -9,11 +9,13 @@ class SourcesController {
     this.registry, {
     required this.resolver,
     required this.downloads,
+    this.providerTimeout = const Duration(seconds: 5),
   });
 
   final ProviderRegistry registry;
   final ResolverCoordinator resolver;
   final DownloadsRepository downloads;
+  final Duration providerTimeout;
 
   List<String> get providerIds =>
       registry.all.map((provider) => provider.id).toList(growable: false);
@@ -22,11 +24,11 @@ class SourcesController {
     final results = <String, MediaItem>{};
     for (final provider in registry.all) {
       try {
-        for (final item in await provider.search(query)) {
+        for (final item in await provider.search(query).timeout(providerTimeout)) {
           results.putIfAbsent('${item.kind.name}:${item.id}', () => item);
         }
       } catch (_) {
-        // A broken provider must not make the shared Sources interface unavailable.
+        // A broken or hung provider must not make the shared Sources interface unavailable.
       }
     }
     return results.values.toList(growable: false);
@@ -36,12 +38,13 @@ class SourcesController {
     final result = <String, List<StreamSource>>{};
     for (final provider in registry.all) {
       try {
-        final providerResult = await provider.sourcesFor(item);
+        final providerResult =
+            await provider.sourcesFor(item).timeout(providerTimeout);
         if (providerResult.sources.isNotEmpty) {
           result[provider.id] = List.unmodifiable(providerResult.sources);
         }
       } catch (_) {
-        // Provider failure is isolated; other registered providers remain usable.
+        // Provider failure/timeout is isolated; other registered providers remain usable.
       }
     }
     return Map.unmodifiable(result);
