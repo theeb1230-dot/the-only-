@@ -39,4 +39,4 @@ class UrlPolicy {
 
 /// Returns a credential-safe diagnostic form of a URI. Query, fragment and
 /// user-info are intentionally discarded so logs cannot leak tokens/secrets.
-String sanitizedUriForLog(Uri uri) => uri.replace(userInfo: '', query: '', fragment: '').toString();
+String sanitizedUriForLog(Uri uri) => Uri(scheme: uri.scheme, host: uri.host, port: uri.hasPort ? uri.port : null, path: uri.path).toString();
