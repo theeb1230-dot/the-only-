@@ -138,7 +138,19 @@ class _CinemaScreenState extends State<CinemaScreen> {
           ),
         if (_selected case final item?) ...[
           const Divider(),
-          Text(item.title, style: Theme.of(context).textTheme.headlineSmall),
+          Semantics(
+            key: Key('cinema-details-${item.id}'),
+            container: true,
+            label: 'Cinema details for ${item.title}',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.title, style: Theme.of(context).textTheme.headlineSmall),
+                Text(item.kind == MediaKind.series ? 'Series' : 'Movie'),
+                Text('${_sources.length} playback source${_sources.length == 1 ? '' : 's'} available'),
+              ],
+            ),
+          ),
           const SizedBox(height: 8),
           if (_sources.isEmpty && !_busy) const Text('No direct sources available'),
           for (var i = 0; i < _sources.length; i++)
