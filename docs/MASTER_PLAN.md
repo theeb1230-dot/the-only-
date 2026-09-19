@@ -22,9 +22,9 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-11 | Cinema details/list/seasons/episodes where applicable | IN_PROGRESS | deeper functional product path pending |
 | TO-12 | Cinema source selection + separate Watch | IN_PROGRESS | source/Watch UI exists; actual player path pending |
 | TO-13 | Cinema separate Download + honest failure states | IN_PROGRESS | explicit Download action exists; execution/durable state pending |
-| TO-14 | Persistent Favorites | IN_PROGRESS | memory repository exists; durable repository pending |
-| TO-15 | Persistent History/resume | IN_PROGRESS | memory repository exists; durable repository pending |
-| TO-16 | Persistent legal Downloads manager | IN_PROGRESS | queue/actions exist; durable/platform execution pending |
+| TO-14 | Persistent Favorites | IN_PROGRESS | production SharedPreferences-backed repository exists and survives repository recreation in deterministic tests; app-restart/DEVICE evidence pending |
+| TO-15 | Persistent History/resume | IN_PROGRESS | production SharedPreferences-backed repository exists and preserves resume position across repository recreation; app-restart/DEVICE evidence pending |
+| TO-16 | Persistent legal Downloads manager | IN_PROGRESS | persistent queue/state repository exists; platform download execution and restart/DEVICE evidence pending |
 | TO-17 | Live TV provider/configuration + authorized channels | IN_PROGRESS | PR #23 merged legal runtime channel provider; LIVE/player proof pending |
 | TO-18 | Live TV EPG now/next/list | IN_PROGRESS | legal provider exposes programme data; product runtime proof pending |
 | TO-19 | Live TV stream selection/player/fallback | IN_PROGRESS | stream selection exists; actual playback/fallback runtime proof pending |
@@ -32,7 +32,7 @@ This plan has exactly TO-01..TO-40. TO-01..TO-30 preserve the historical scope a
 | TO-21 | Resolvers diagnostics UI + real Watch integration | IN_PROGRESS | diagnostics/controller exists; Watch/player integration pending |
 | TO-22 | Tools/Providers registry/health/priority/preferences/diagnostics | IN_PROGRESS | registry/health controller exists; complete product diagnostics pending |
 | TO-23 | Sixth interface clean-room + Feature Gate + functional runtime proof | IN_PROGRESS | gate exists; placeholder is not acceptance; license/archive review required before clean-room implementation |
-| TO-24 | Production persistent storage + migrations/versioning | IN_PROGRESS | abstractions/memory implementations exist; durable backend pending |
+| TO-24 | Production persistent storage + migrations/versioning | IN_PROGRESS | SharedPreferences-backed schema v2 store, serialized writes, corruption fail-closed behavior and v1→v2 migration exist; real app restart/DEVICE evidence pending |
 | TO-25 | Player core HLS/MP4/DASH with platform-safe behavior | IN_PROGRESS | coordinator/adapters modeled; actual platform playback pending |
 | TO-26 | Legal embed/WebView last-resort fallback + host/navigation policy | IN_PROGRESS | policy/model work exists; runtime adapter proof pending |
 | TO-27 | Watch/Download separation end-to-end | IN_PROGRESS | UI actions separate; complete execution paths pending |
