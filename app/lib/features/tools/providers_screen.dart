@@ -21,7 +21,7 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
     setState(() { _probing.add(id); _error = null; });
     try {
       final health = await widget.controller.probe(id);
-      if (!health.healthy) {
+      if (health.failures > 0 && health.successes == 0) {
         if (mounted) setState(() => _error = 'Provider health probe failed safely');
       }
     } catch (_) {
