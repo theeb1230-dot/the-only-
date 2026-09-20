@@ -2,16 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:the_only/features/system_diagnostics/system_diagnostics_controller.dart';
 import 'package:the_only/features/system_diagnostics/system_diagnostics_screen.dart';
-class FixtureSnapshotProvider implements SystemSnapshotProvider { int captures=0; @override Future<SystemSnapshot> capture() async { captures++; return SystemSnapshot(operatingSystem:'fixture-os',operatingSystemVersion:'1.$captures',logicalProcessors:8,localeName:'ar_SA',appUptime:Duration(seconds:captures),capturedAt:DateTime.utc(2026,9,18,12,0,captures)); } }
-void main(){testWidgets('sixth interface loads visible local diagnostics and refreshes',(tester) async {final provider=FixtureSnapshotProvider();await tester.pumpWidget(MaterialApp(home:Scaffold(body:SystemDiagnosticsScreen(controller:SystemDiagnosticsController(provider)))));await tester.pumpAndSettle();expect(find.byKey(const Key('system-diagnostics-screen')),findsOneWidget);expect(find.text('تشخيص النظام'),findsOneWidget);expect(find.text('معلومات الجهاز المحلية فقط. لا يتم رفع أي بيانات تشخيصية.'),findsOneWidget);expect(find.text('المنصة'),findsOneWidget);expect(find.text('fixture-os'),findsOneWidget);expect(find.text('1.1'),findsOneWidget);expect(find.text('8'),findsOneWidget);expect(find.text('ar_SA'),findsOneWidget);expect(provider.captures,1);await tester.tap(find.byKey(const Key('system-diagnostics-refresh')));await tester.pumpAndSettle();expect(find.text('1.2'),findsOneWidget);expect(provider.captures,2);});}
 
-class FailingSnapshotProvider implements SystemSnapshotProvider { @override Future<SystemSnapshot> capture() async => throw StateError('fixture failure'); }
+class FixtureSnapshotProvider implements SystemSnapshotProvider {
+  int captures = 0;
+  @override
+  Future<SystemSnapshot> capture() async {
+    captures++;
+    return SystemSnapshot(
+      operatingSystem: 'fixture-os',
+      operatingSystemVersion: '1.$captures',
+      logicalProcessors: 8,
+      localeName: 'ar_SA',
+      appUptime: Duration(seconds: captures),
+      capturedAt: DateTime.utc(2026, 9, 18, 12, 0, captures),
+    );
+  }
+}
 
-testWidgets('diagnostics failure clears loading and never lies with empty state',(tester) async {
-  await tester.pumpWidget(MaterialApp(home:Scaffold(body:SystemDiagnosticsScreen(controller:SystemDiagnosticsController(FailingSnapshotProvider())))));
-  await tester.pumpAndSettle();
-  expect(find.byKey(const Key('system-diagnostics-error')),findsOneWidget);
-  expect(find.text('تعذر قراءة تشخيص النظام المحلي'),findsOneWidget);
-  expect(find.byKey(const Key('system-diagnostics-loading')),findsNothing);
-  expect(find.byKey(const Key('system-diagnostics-empty')),findsNothing);
-});
+class FailingSnapshotProvider implements SystemSnapshotProvider {
+  @override
+  Future<SystemSnapshot> capture() async => throw StateError('fixture failure');
+}
+
+void main() {
+  testWidgets('sixth interface loads visible local diagnostics and refreshes', (tester) async {
+    final provider = FixtureSnapshotProvider();
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SystemDiagnosticsScreen(controller: SystemDiagnosticsController(provider)))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
+    expect(find.text('تشخيص النظام'), findsOneWidget);
+    expect(find.text('معلومات الجهاز المحلية فقط. لا يتم رفع أي بيانات تشخيصية.'), findsOneWidget);
+    expect(find.text('المنصة'), findsOneWidget);
+    expect(find.text('fixture-os'), findsOneWidget);
+    expect(find.text('1.1'), findsOneWidget);
+    expect(find.text('8'), findsOneWidget);
+    expect(find.text('ar_SA'), findsOneWidget);
+    expect(provider.captures, 1);
+    await tester.tap(find.byKey(const Key('system-diagnostics-refresh')));
+    await tester.pumpAndSettle();
+    expect(find.text('1.2'), findsOneWidget);
+    expect(provider.captures, 2);
+  });
+
+  testWidgets('diagnostics failure clears loading and never lies with empty state', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SystemDiagnosticsScreen(controller: SystemDiagnosticsController(FailingSnapshotProvider())))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('system-diagnostics-error')), findsOneWidget);
+    expect(find.text('تعذر قراءة تشخيص النظام المحلي'), findsOneWidget);
+    expect(find.byKey(const Key('system-diagnostics-loading')), findsNothing);
+    expect(find.byKey(const Key('system-diagnostics-empty')), findsNothing);
+  });
+}
