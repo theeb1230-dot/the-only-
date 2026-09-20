@@ -66,7 +66,7 @@ void main() {
 
     final watchButton = tester.widget<FilledButton>(watch);
     expect(watchButton.onPressed, isNotNull);
-    await watchButton.onPressed!.call();
+    watchButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(launched?.uri.host, 'commondatastorage.googleapis.com');
     expect(launched?.protocol, StreamProtocol.mp4);
@@ -75,7 +75,7 @@ void main() {
 
     final downloadButton = tester.widget<FilledButton>(download);
     expect(downloadButton.onPressed, isNotNull);
-    await downloadButton.onPressed!.call();
+    downloadButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(await downloads.all(), hasLength(1));
   });
