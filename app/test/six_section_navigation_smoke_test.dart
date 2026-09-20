@@ -62,7 +62,7 @@ void main() {
       );
       libraryButton.onPressed?.call();
       await tester.pumpAndSettle();
-      expect(find.text('Library'), findsWidgets);
+      expect(find.text('المكتبة'), findsWidgets);
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(
