@@ -18,6 +18,12 @@ class FixtureResolver implements StreamResolver {
   ];
 }
 
+class ThrowingResolver implements StreamResolver {
+  @override String get id => 'throwing-resolver';
+  @override bool supports(Uri uri) => true;
+  @override Future<List<StreamSource>> resolve(Uri uri) async => throw StateError('fixture failure');
+}
+
 ResolversController fixtureController() {
   final registry = ResolverRegistry([FixtureResolver()]);
   return ResolversController(registry, ResolverCoordinator(registry, const StreamValidator(UrlPolicy())));
@@ -33,6 +39,15 @@ void main() {
     expect(find.byKey(const Key('resolver-download-0')), findsOneWidget); expect(find.byKey(const Key('resolver-download-1')), findsNothing);
     await tester.tap(find.byKey(const Key('resolver-watch-1'))); await tester.pump(); expect(watches, 1); expect(downloads, 0);
     await tester.tap(find.byKey(const Key('resolver-download-0'))); await tester.pump(); expect(downloads, 1);
+  });
+  testWidgets('Resolver failure clears loading and exposes safe error', (tester) async {
+    final registry = ResolverRegistry([ThrowingResolver()]);
+    final controller = ResolversController(registry, ResolverCoordinator(registry, const StreamValidator(UrlPolicy())));
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller))));
+    await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://example.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pumpAndSettle();
+    expect(find.byKey(const Key('resolver-error')), findsOneWidget);
+    expect(find.byKey(const Key('resolver-loading')), findsNothing);
+    expect(find.byKey(const Key('resolver-result-0')), findsNothing);
   });
   testWidgets('Resolver reports unsupported URI without resolving', (tester) async {
     final controller = fixtureController();
