@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   video_player: ^2.14.0
   webview_flutter: ^4.13.0
   shared_preferences: ^2.5.5
