@@ -48,7 +48,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           builder: (context, snapshot) {
             final items = snapshot.data ?? const [];
             if (items.isEmpty) return const ListTile(key: Key('favorites-empty'), title: Text('لا توجد عناصر مفضلة بعد'));
-            return Column(children: [for (final item in items) ListTile(key: Key('favorite-${item.id}'), title: Text(item.title), subtitle: Text(item.kind.name), trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async { await widget.favorites.remove(item.id); await _refresh(); }))]);
+            return Column(children: [for (final item in items) ListTile(key: Key('favorite-${item.id}'), title: Text(item.title), subtitle: Text(item.kind.name), trailing: IconButton(key: Key('favorite-remove-${item.id}'), tooltip: 'حذف من المفضلة', icon: const Icon(Icons.delete_outline), onPressed: () async { await widget.favorites.remove(item.id); await _refresh(); }))]);
           },
         ),
         const Divider(),
@@ -88,7 +88,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         IconButton(key: Key('download-start-${job.id}'), tooltip: 'بدء / إعادة المحاولة', icon: const Icon(Icons.download), onPressed: () => _start(job)),
                       if (widget.transfer != null && job.state == DownloadState.running)
                         IconButton(key: Key('download-cancel-${job.id}'), tooltip: 'إلغاء', icon: const Icon(Icons.cancel_outlined), onPressed: () { widget.transfer!.cancel(job.id); }),
-                      IconButton(tooltip: 'حذف التنزيل', icon: const Icon(Icons.delete_outline), onPressed: () async { widget.transfer?.cancel(job.id); await widget.downloads.remove(job.id); await _refresh(); }),
+                      IconButton(key: Key('download-remove-${job.id}'), tooltip: 'حذف التنزيل', icon: const Icon(Icons.delete_outline), onPressed: () async { widget.transfer?.cancel(job.id); await widget.downloads.remove(job.id); await _refresh(); }),
                     ],
                   ),
                 ),
