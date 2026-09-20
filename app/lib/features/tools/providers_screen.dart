@@ -12,14 +12,17 @@ class ProvidersScreen extends StatefulWidget {
 }
 
 class _ProvidersScreenState extends State<ProvidersScreen> {
-  final Set<String> _probing = <String>{};\n  String? _error;
+  final Set<String> _probing = <String>{};
+  String? _error;
 
   List<ProviderToolState> get _states => widget.controller.states();
 
   Future<void> _probe(String id) async {
-    setState(() => _probing.add(id));
+    setState(() { _probing.add(id); _error = null; });
     try {
       await widget.controller.probe(id);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Provider health probe failed safely');
     } finally {
       if (mounted) setState(() => _probing.remove(id));
     }
@@ -43,7 +46,9 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
       );
     }
 
-    return ListView.builder(
+    return Column(children: [
+      if (_error != null) Semantics(liveRegion: true, child: Text(_error!, key: const Key('providers-error'))),
+      Expanded(child: ListView.builder(
       key: const Key('providers-list'),
       padding: const EdgeInsets.all(16),
       itemCount: states.length,
@@ -89,6 +94,7 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
           ),
         );
       },
-    );
+    )),
+    ]);
   }
 }
