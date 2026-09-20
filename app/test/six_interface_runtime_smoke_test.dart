@@ -87,7 +87,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('resolver-run')));
     await tester.pumpAndSettle();
-    expect(find.text('Supported'), findsOneWidget);
+    expect(find.text('مدعوم'), findsOneWidget);
     expect(find.byKey(const Key('resolver-result-0')), findsOneWidget);
     expect(find.byKey(const Key('resolver-loading')), findsNothing);
     expect(find.byKey(const Key('resolver-error')), findsNothing);
@@ -124,7 +124,7 @@ void main() {
     ))));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
-    expect(find.text('Local device information only. No telemetry is uploaded.'), findsOneWidget);
+    expect(find.text('معلومات الجهاز المحلية فقط. لا يتم رفع أي بيانات تشخيصية.'), findsOneWidget);
     expect(find.text('test-os'), findsOneWidget);
     expect(find.byKey(const Key('system-diagnostics-loading')), findsNothing);
     expect(find.byKey(const Key('system-diagnostics-error')), findsNothing);
