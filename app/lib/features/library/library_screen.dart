@@ -16,6 +16,15 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
+  String _downloadState(DownloadJob job) => switch (job.state) {
+    DownloadState.queued => 'في الانتظار',
+    DownloadState.running => 'جارٍ التنزيل ${(job.progress * 100).round()}%',
+    DownloadState.paused => 'متوقف مؤقتًا',
+    DownloadState.completed => 'مكتمل',
+    DownloadState.failed => 'فشل',
+    DownloadState.cancelled => 'ملغى',
+  };
+
   Future<void> _refresh() async => setState(() {});
 
   Future<void> _start(DownloadJob job) async {
@@ -67,7 +76,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(job.state == DownloadState.running ? 'Downloading ${(job.progress * 100).round()}%' : job.state.name),
+                      Text(_downloadState(job)),
                       if (job.state == DownloadState.running) LinearProgressIndicator(value: job.progress > 0 ? job.progress : null),
                       if (job.error != null) Text(job.error!, key: Key('download-error-${job.id}')),
                       if (job.state == DownloadState.completed && job.localPath != null) const Text('محفوظ للمشاهدة دون اتصال'),
@@ -79,7 +88,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         IconButton(key: Key('download-start-${job.id}'), tooltip: 'بدء / إعادة المحاولة', icon: const Icon(Icons.download), onPressed: () => _start(job)),
                       if (widget.transfer != null && job.state == DownloadState.running)
                         IconButton(key: Key('download-cancel-${job.id}'), tooltip: 'إلغاء', icon: const Icon(Icons.cancel_outlined), onPressed: () { widget.transfer!.cancel(job.id); }),
-                      IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async { widget.transfer?.cancel(job.id); await widget.downloads.remove(job.id); await _refresh(); }),
+                      IconButton(tooltip: 'حذف التنزيل', icon: const Icon(Icons.delete_outline), onPressed: () async { widget.transfer?.cancel(job.id); await widget.downloads.remove(job.id); await _refresh(); }),
                     ],
                   ),
                 ),
