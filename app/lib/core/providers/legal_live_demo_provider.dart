@@ -52,9 +52,17 @@ final class LegalLiveDemoProvider implements LiveTvProvider {
     DateTime from,
     DateTime to,
   ) async {
-    final channel = _channels.where((item) => item.id == channelId).firstOrNull;
+    LiveChannel? channel;
+    for (final candidate in _channels) {
+      if (candidate.id == channelId) {
+        channel = candidate;
+        break;
+      }
+    }
     if (channel == null || !to.isAfter(from)) return const [];
-    final midpoint = from.add(Duration(milliseconds: to.difference(from).inMilliseconds ~/ 2));
+    final midpoint = from.add(
+      Duration(milliseconds: to.difference(from).inMilliseconds ~/ 2),
+    );
     return [
       Programme(
         channelId: channelId,
