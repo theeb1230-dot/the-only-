@@ -38,26 +38,31 @@ void main() {
       controller: controller,
       playerLauncher: (_, __, source) async { launched = source; },
     ))));
-    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Flower');
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Bunny');
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
-    expect(find.text('MDN Flower Sample'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('cinema-item-mdn-flower')));
+    expect(find.text('Big Buck Bunny'), findsOneWidget);
+    await tester.tap(find.text('Big Buck Bunny'));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('cinema-details-mdn-flower')), findsOneWidget);
+    expect(find.byKey(const Key('cinema-details-big-buck-bunny')), findsOneWidget);
     expect(find.text('فيلم'), findsOneWidget);
     expect(find.text('مصادر التشغيل المتاحة: 1'), findsOneWidget);
     expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
     expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('cinema-watch-0')));
+    final watch = find.byKey(const Key('cinema-watch-0'));
+    await tester.ensureVisible(watch);
+    await tester.tap(watch);
     await tester.pumpAndSettle();
-    expect(launched?.uri.host, 'mdn.github.io');
+    expect(launched?.uri.host, 'commondatastorage.googleapis.com');
     expect(launched?.protocol, StreamProtocol.mp4);
     expect(await history.all(), hasLength(1));
     expect(await downloads.all(), isEmpty);
 
-    await tester.tap(find.byKey(const Key('cinema-download-0')));
+    final download = find.byKey(const Key('cinema-download-0'));
+    await tester.ensureVisible(download);
+    await tester.tap(download);
     await tester.pumpAndSettle();
     expect(await downloads.all(), hasLength(1));
   });
@@ -70,14 +75,14 @@ void main() {
       playerLauncher: (_, __, source) async { launched = source; },
     ))));
     await tester.pumpAndSettle();
-    expect(find.text('The Only Sample Channel'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('live-channel-sample-live')));
+    expect(find.text('Big Buck Bunny'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('live-channel-public-bunny')));
     await tester.pumpAndSettle();
-    expect(find.text('Public sample playback'), findsOneWidget);
+    expect(find.textContaining('Big Buck Bunny'), findsWidgets);
     expect(find.byKey(const Key('live-watch-0')), findsOneWidget);
     await tester.tap(find.byKey(const Key('live-watch-0')));
     await tester.pumpAndSettle();
-    expect(launched?.uri.host, 'mdn.github.io');
+    expect(launched?.uri.host, 'commondatastorage.googleapis.com');
     expect(launched?.protocol, StreamProtocol.mp4);
   });
 }
