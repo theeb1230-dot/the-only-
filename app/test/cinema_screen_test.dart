@@ -96,8 +96,6 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: Scaffold(body: CinemaScreen(controller: controller))),
     );
-    // Cinema preloads on initState. Settle that real product lifecycle before
-    // simulating a user search so the search button is enabled deterministically.
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('cinema-search-field')),
@@ -141,7 +139,6 @@ void main() {
         ),
       ),
     );
-    // Do not race the automatic initial catalog preload with the explicit search.
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('cinema-search-field')),
@@ -154,16 +151,24 @@ void main() {
     expect(find.byKey(const Key('cinema-error')), findsNothing);
     expect(find.byKey(const Key('cinema-empty')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('cinema-favorite-movie-1')));
+    final favorite = find.byKey(const Key('cinema-favorite-movie-1'));
+    await tester.ensureVisible(favorite);
+    await tester.tap(favorite);
     await tester.pump();
     expect(favorites.items, hasLength(1));
 
-    await tester.tap(find.byKey(const Key('cinema-item-movie-1')));
+    final item = find.byKey(const Key('cinema-item-movie-1'));
+    await tester.ensureVisible(item);
+    await tester.tap(item);
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
-    expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('cinema-watch-0')));
+    final watch = find.byKey(const Key('cinema-watch-0'));
+    final download = find.byKey(const Key('cinema-download-0'));
+    expect(watch, findsOneWidget);
+    expect(download, findsOneWidget);
+
+    await tester.ensureVisible(watch);
+    await tester.tap(watch);
     await tester.pumpAndSettle();
     expect(history.entries, hasLength(1));
     expect(launched, isNotNull);
@@ -174,7 +179,8 @@ void main() {
       reason: 'Watch must never implicitly queue a download',
     );
 
-    await tester.tap(find.byKey(const Key('cinema-download-0')));
+    await tester.ensureVisible(download);
+    await tester.tap(download);
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
     expect(
