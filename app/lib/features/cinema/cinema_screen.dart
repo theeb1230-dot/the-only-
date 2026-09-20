@@ -40,7 +40,7 @@ class _CinemaScreenState extends State<CinemaScreen> {
     for(final item in _results)ListTile(key:Key('cinema-item-${item.id}'),title:Text(item.title),subtitle:Text(item.kind.name),onTap:()=>_open(item),trailing:IconButton(key:Key('cinema-favorite-${item.id}'),tooltip:'Favorite',onPressed:()=>widget.controller.favorite(item),icon:const Icon(Icons.favorite_border))),
     if(_selected case final item?)...[
       const Divider(),Semantics(key:Key('cinema-details-${item.id}'),container:true,label:'Cinema details for ${item.title}',child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(item.title,style:Theme.of(context).textTheme.headlineSmall),Text(item.kind==MediaKind.series?'Series':'Movie'),Text('${_sources.length} playback source${_sources.length==1?'':'s'} available')])),const SizedBox(height:8),
-      if(_sources.isEmpty&&!_busy)const Text('No direct sources available'),
+      if(_sources.isEmpty&&!_busy&&_error==null)const Text('No direct sources available',key:Key('cinema-sources-empty')),
       for(var i=0;i<_sources.length;i++)ListTile(key:Key('cinema-source-$i'),title:Text(_sources[i].quality??_sources[i].protocol.name.toUpperCase()),subtitle:Text(_sources[i].providerId),trailing:Wrap(spacing:8,children:[FilledButton.icon(key:Key('cinema-watch-$i'),onPressed:_busy?null:()=>_watch(item,_sources[i]),icon:const Icon(Icons.play_arrow),label:const Text('Watch')),OutlinedButton.icon(key:Key('cinema-download-$i'),onPressed:()=>_download(item,_sources[i]),icon:const Icon(Icons.download),label:const Text('Download'))]))
     ]
   ]);
