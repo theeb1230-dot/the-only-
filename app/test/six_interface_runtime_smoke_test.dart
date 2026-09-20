@@ -32,6 +32,14 @@ final class _SnapshotProvider implements SystemSnapshotProvider {
       );
 }
 
+Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+  expect(finder, findsOneWidget);
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -59,22 +67,15 @@ void main() {
     expect(find.text('Big Buck Bunny'), findsOneWidget);
     expect(find.byKey(const Key('sources-loading')), findsNothing);
     expect(find.byKey(const Key('sources-error')), findsNothing);
-    await tester.tap(find.byKey(const Key('sources-item-big-buck-bunny')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('sources-item-big-buck-bunny')));
     expect(find.byKey(const Key('sources-watch-legal-demo-0')), findsOneWidget);
     expect(find.byKey(const Key('sources-download-legal-demo-0')), findsOneWidget);
 
-    final watch = find.byKey(const Key('sources-watch-legal-demo-0'));
-    await tester.ensureVisible(watch);
-    await tester.tap(watch);
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('sources-watch-legal-demo-0')));
     expect(watched?.uri.host, 'commondatastorage.googleapis.com');
     expect(await downloads.all(), isEmpty);
 
-    final download = find.byKey(const Key('sources-download-legal-demo-0'));
-    await tester.ensureVisible(download);
-    await tester.tap(download);
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('sources-download-legal-demo-0')));
     expect(await downloads.all(), hasLength(1));
   });
 
@@ -90,14 +91,12 @@ void main() {
       find.byKey(const Key('resolver-uri')),
       'https://mdn.github.io/shared-assets/videos/flower.mp4',
     );
-    await tester.tap(find.byKey(const Key('resolver-run')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('resolver-run')));
     expect(find.text('مدعوم'), findsOneWidget);
     expect(find.byKey(const Key('resolver-result-0')), findsOneWidget);
     expect(find.byKey(const Key('resolver-loading')), findsNothing);
     expect(find.byKey(const Key('resolver-error')), findsNothing);
-    await tester.tap(find.byKey(const Key('resolver-watch-0')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('resolver-watch-0')));
     expect(watched?.protocol, StreamProtocol.mp4);
     expect(watched?.uri.host, 'mdn.github.io');
   });
@@ -113,13 +112,11 @@ void main() {
     expect(find.byKey(const Key('providers-empty')), findsNothing);
     expect(find.byKey(const Key('providers-error')), findsNothing);
     expect(health.health('legal-demo').successes, 0);
-    await tester.tap(find.byKey(const Key('provider-probe-legal-demo')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('provider-probe-legal-demo')));
     expect(health.health('legal-demo').successes, 1);
     expect(health.health('legal-demo').failures, 0);
     expect(health.health('legal-demo').score, greaterThan(0));
-    await tester.tap(find.byKey(const Key('provider-enabled-legal-demo')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('provider-enabled-legal-demo')));
     expect(preferences.getBool('the_only.provider.legal-demo.enabled'), isFalse);
   });
 
@@ -135,8 +132,7 @@ void main() {
     expect(find.byKey(const Key('system-diagnostics-error')), findsNothing);
     expect(find.byKey(const Key('system-diagnostics-empty')), findsNothing);
     expect(find.text('4'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('system-diagnostics-refresh')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const Key('system-diagnostics-refresh')));
     expect(find.text('test-os'), findsOneWidget);
   });
 }
