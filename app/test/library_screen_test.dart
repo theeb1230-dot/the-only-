@@ -32,5 +32,7 @@ void main() {
     expect(find.text('استئناف عند 42 ث'), findsOneWidget);
     expect(find.text('persisted.mp4'), findsOneWidget);
     expect(find.text('في الانتظار'), findsOneWidget);
+    expect(find.byTooltip('حذف من المفضلة'), findsOneWidget);
+    expect(find.byTooltip('حذف التنزيل'), findsOneWidget);
   });
 }
