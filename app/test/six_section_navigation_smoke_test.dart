@@ -42,16 +42,16 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('cinema-screen')), findsOneWidget);
-      await tapDestination(tester, 'Live TV');
+      await tapDestination(tester, 'البث المباشر');
       expect(find.byKey(const Key('live-tv-screen')), findsOneWidget);
-      await tapDestination(tester, 'Sources');
+      await tapDestination(tester, 'المصادر');
       expect(find.byKey(const Key('sources-screen')), findsOneWidget);
-      await tapDestination(tester, 'Resolvers');
+      await tapDestination(tester, 'المحللات');
       expect(find.byKey(const Key('resolvers-screen')), findsOneWidget);
-      await tapDestination(tester, 'Tools / Providers');
+      await tapDestination(tester, 'المزودون');
       expect(find.byKey(const Key('providers-list')), findsOneWidget);
       expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
-      await tapDestination(tester, 'System Diagnostics');
+      await tapDestination(tester, 'تشخيص النظام');
       expect(
         find.byKey(const Key('system-diagnostics-screen')),
         findsOneWidget,
