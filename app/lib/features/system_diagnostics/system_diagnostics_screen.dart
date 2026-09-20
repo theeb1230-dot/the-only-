@@ -23,7 +23,8 @@ class _SystemDiagnosticsScreenState extends State<SystemDiagnosticsScreen> {
       const Text('Local device information only. No telemetry is uploaded.'),
       if (_busy) const LinearProgressIndicator(key: Key('system-diagnostics-loading')),
       if (_error != null) Semantics(liveRegion: true, child: Text(_error!, key: const Key('system-diagnostics-error'))),
-      if (!_busy && _error == null && s == null) const Text('No diagnostics available', key: Key('system-diagnostics-empty')),\n      if (s != null) ...[
+      if (!_busy && _error == null && s == null) const Text('No diagnostics available', key: Key('system-diagnostics-empty')),
+      if (s != null) ...[
         _DiagnosticTile(label: 'Platform', value: s.operatingSystem),
         _DiagnosticTile(label: 'OS version', value: s.operatingSystemVersion),
         _DiagnosticTile(label: 'Logical processors', value: '${s.logicalProcessors}'),
