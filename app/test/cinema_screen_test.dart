@@ -167,7 +167,11 @@ void main() {
     final download = find.byKey(const Key('cinema-download-0'));
     expect(watch, findsOneWidget);
     expect(download, findsOneWidget);
-    await tester.ensureVisible(watch);
+    await tester.scrollUntilVisible(
+      watch,
+      300,
+      scrollable: find.byKey(const Key('cinema-screen')),
+    );
     await tester.tap(watch);
     await tester.pumpAndSettle();
     expect(history.entries, hasLength(1));
@@ -178,7 +182,11 @@ void main() {
       isEmpty,
       reason: 'Watch must never implicitly queue a download',
     );
-    await tester.ensureVisible(download);
+    await tester.scrollUntilVisible(
+      download,
+      200,
+      scrollable: find.byKey(const Key('cinema-screen')),
+    );
     await tester.tap(download);
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
