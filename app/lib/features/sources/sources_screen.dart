@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/domain/download_policy.dart';
 import '../../core/domain/models.dart';
-import '../../core/player/player_screen.dart';
+import '../../core/player/playback_screen.dart';
 import 'sources_controller.dart';
 
 typedef SourcesPlayerLauncher = Future<void> Function(
@@ -85,7 +85,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
     }
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PlayerScreen(source: source, title: item.title),
+        builder: (_) => PlaybackScreen(source: source, title: item.title),
       ),
     );
   }
@@ -151,10 +151,10 @@ class _SourcesScreenState extends State<SourcesScreen> {
               ),
             ),
           ),
-          if (_busy) const LinearProgressIndicator(),
-          if (_error != null) Text(_error!, key: const Key('sources-error')),
+          if (_busy) const LinearProgressIndicator(key: Key('sources-loading')),
+          if (_error != null) Semantics(liveRegion: true, child: Text(_error!, key: const Key('sources-error'))),
           if (_results.isEmpty && !_busy && _query.text.isNotEmpty)
-            const Text('No results'),
+            const Text('No results', key: Key('sources-empty')),
           for (final item in _results)
             ListTile(
               key: Key('sources-item-${item.id}'),
@@ -165,7 +165,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
           if (_selected case final item?) ...[
             const Divider(),
             Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-            if (_sources.isEmpty && !_busy) const Text('No sources available'),
+            if (_sources.isEmpty && !_busy) const Text('No sources available', key: Key('sources-streams-empty')),
             for (final entry in _sources.entries) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 12),
