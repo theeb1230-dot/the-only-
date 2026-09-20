@@ -26,7 +26,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Persisted Movie'), findsNWidgets(2));
-    expect(find.text('Resume at 42s'), findsOneWidget);
+    expect(find.text('المفضلة'), findsOneWidget);
+    expect(find.text('السجل'), findsOneWidget);
+    expect(find.text('التنزيلات'), findsOneWidget);
+    expect(find.text('استئناف عند 42 ث'), findsOneWidget);
     expect(find.text('persisted.mp4'), findsOneWidget);
     expect(find.text('queued'), findsOneWidget);
   });
