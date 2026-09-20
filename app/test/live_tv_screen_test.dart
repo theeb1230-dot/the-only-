@@ -46,7 +46,23 @@ class ScreenFixtureProvider implements LiveTvProvider {
       ];
 }
 
+class EmptyLiveProvider implements LiveTvProvider {
+  @override String get id => 'empty-live';
+  @override Future<List<LiveChannel>> channels() async => const [];
+  @override Future<List<Programme>> programmes(String channelId, DateTime from, DateTime to) async => const [];
+  @override Future<List<StreamSource>> streams(LiveChannel channel) async => const [];
+}
+
 void main() {
+  testWidgets('Live TV exposes truthful empty state after loading', (tester) async {
+    final resolver = ResolverCoordinator(ResolverRegistry(const [DirectMediaResolver()]), const StreamValidator(UrlPolicy()));
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: LiveTvScreen(controller: LiveTvController([EmptyLiveProvider()], resolver: resolver)))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('live-tv-empty')), findsOneWidget);
+    expect(find.byKey(const Key('live-tv-loading')), findsNothing);
+    expect(find.byKey(const Key('live-tv-error')), findsNothing);
+  });
+
   testWidgets('Live TV resolves selected stream before explicit Watch', (tester) async {
     var watched = false;
     final resolver = ResolverCoordinator(
