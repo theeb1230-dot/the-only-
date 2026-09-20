@@ -5,22 +5,10 @@ import 'package:the_only/core/data/persistent_library.dart';
 import 'package:the_only/main.dart';
 
 Future<void> tapDestination(WidgetTester tester, String label) async {
-  final navFinder = find.byType(NavigationBar);
-  expect(navFinder, findsOneWidget);
-  final nav = tester.widget<NavigationBar>(navFinder);
-  final destinations = nav.destinations
-      .whereType<NavigationDestination>()
-      .toList(growable: false);
-  final index = destinations.indexWhere(
-    (destination) => destination.label == label,
-  );
-  expect(
-    index,
-    greaterThanOrEqualTo(0),
-    reason: 'Missing navigation destination: $label',
-  );
-  nav.onDestinationSelected?.call(index);
-  await tester.pump();
+  final destination = find.text(label).last;
+  expect(destination, findsOneWidget, reason: 'Missing navigation destination: $label');
+  await tester.tap(destination);
+  await tester.pumpAndSettle();
 }
 
 void main() {
