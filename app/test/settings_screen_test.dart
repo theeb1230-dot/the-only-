@@ -12,6 +12,9 @@ void main() {
       settings: settings,
       onChanged: (id, value) { changed = id; enabled = value; },
     )));
+    expect(find.text('الأقسام'), findsOneWidget);
+    expect(find.text('السينما'), findsOneWidget);
+    expect(find.text('تشخيص النظام'), findsOneWidget);
     await tester.tap(find.byKey(const Key('section-optional')));
     await tester.pump();
     expect(settings.isEnabled(SectionId.optional), isTrue);
