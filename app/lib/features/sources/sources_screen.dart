@@ -183,9 +183,9 @@ class _SourcesScreenState extends State<SourcesScreen> {
             ),
           for (final item in _results)
             Card(
-              key: Key('sources-item-${item.id}'),
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
+                key: Key('sources-item-${item.id}'),
                 leading: item.posterUrl == null
                     ? const CircleAvatar(child: Icon(Icons.movie_outlined))
                     : ClipRRect(
