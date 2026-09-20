@@ -20,7 +20,10 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
   Future<void> _probe(String id) async {
     setState(() { _probing.add(id); _error = null; });
     try {
-      await widget.controller.probe(id);
+      final health = await widget.controller.probe(id);
+      if (!health.healthy) {
+        if (mounted) setState(() => _error = 'Provider health probe failed safely');
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'Provider health probe failed safely');
     } finally {
