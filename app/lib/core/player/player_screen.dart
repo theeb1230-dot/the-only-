@@ -103,7 +103,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                     future: _initialize,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState != ConnectionState.done || controller == null || !controller.value.isInitialized) {
-                        return const Semantics(label: 'Loading player', liveRegion: true, child: CircularProgressIndicator(key: Key('player-loading')));
+                        return Semantics(label: 'Loading player', liveRegion: true, child: const CircularProgressIndicator(key: Key('player-loading')));
                       }
                       return Column(
                         mainAxisSize: MainAxisSize.min,
