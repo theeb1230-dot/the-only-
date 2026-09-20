@@ -12,7 +12,7 @@ class ProvidersScreen extends StatefulWidget {
 }
 
 class _ProvidersScreenState extends State<ProvidersScreen> {
-  final Set<String> _probing = <String>{};
+  final Set<String> _probing = <String>{};\n  String? _error;
 
   List<ProviderToolState> get _states => widget.controller.states();
 
