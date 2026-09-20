@@ -68,7 +68,10 @@ void main() {
     await tester.enterText(find.byKey(const Key('cinema-search-field')), 'fixture');
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
-    expect(find.text('Fixture Movie'), findsOneWidget);\n    expect(find.byKey(const Key('cinema-loading')), findsNothing);\n    expect(find.byKey(const Key('cinema-error')), findsNothing);\n    expect(find.byKey(const Key('cinema-empty')), findsNothing);
+    expect(find.text('Fixture Movie'), findsOneWidget);
+    expect(find.byKey(const Key('cinema-loading')), findsNothing);
+    expect(find.byKey(const Key('cinema-error')), findsNothing);
+    expect(find.byKey(const Key('cinema-empty')), findsNothing);
 
     await tester.tap(find.byKey(const Key('cinema-favorite-movie-1')));
     await tester.pump();
