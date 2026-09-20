@@ -21,7 +21,9 @@ ResolverCoordinator legalResolver() => ResolverCoordinator(
 );
 
 void main() {
-  testWidgets('legal Cinema runtime provider reaches resolved player launch and keeps Download separate', (tester) async {
+  testWidgets(
+      'legal Cinema runtime provider reaches resolved player launch and keeps Download separate',
+      (tester) async {
     final favorites = MemoryFavoritesRepository();
     final history = MemoryHistoryRepository();
     final downloads = MemoryDownloadsRepository();
@@ -34,12 +36,17 @@ void main() {
     );
     StreamSource? launched;
 
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CinemaScreen(
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: CinemaScreen(
       controller: controller,
-      playerLauncher: (_, __, source) async { launched = source; },
+      playerLauncher: (_, __, source) async {
+        launched = source;
+      },
     ))));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Bunny');
+    await tester.enterText(
+        find.byKey(const Key('cinema-search-field')), 'Bunny');
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.text('Big Buck Bunny'), findsOneWidget);
@@ -47,14 +54,19 @@ void main() {
     await tester.ensureVisible(item);
     await tester.tap(item);
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('cinema-details-big-buck-bunny')), findsOneWidget);
+    expect(find.byKey(const Key('cinema-details-big-buck-bunny')),
+        findsOneWidget);
     expect(find.text('فيلم'), findsOneWidget);
     expect(find.text('مصادر التشغيل المتاحة: 1'), findsOneWidget);
     expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
     expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
 
     final watch = find.byKey(const Key('cinema-watch-0'));
-    await tester.ensureVisible(watch);
+    await tester.scrollUntilVisible(
+      watch,
+      300,
+      scrollable: find.byKey(const Key('cinema-screen')),
+    );
     await tester.tap(watch);
     await tester.pumpAndSettle();
     expect(launched?.uri.host, 'commondatastorage.googleapis.com');
@@ -63,18 +75,29 @@ void main() {
     expect(await downloads.all(), isEmpty);
 
     final download = find.byKey(const Key('cinema-download-0'));
-    await tester.ensureVisible(download);
+    await tester.scrollUntilVisible(
+      download,
+      200,
+      scrollable: find.byKey(const Key('cinema-screen')),
+    );
     await tester.tap(download);
     await tester.pumpAndSettle();
     expect(await downloads.all(), hasLength(1));
   });
 
-  testWidgets('legal Live TV runtime provider reaches channel guide stream resolver and player launch', (tester) async {
+  testWidgets(
+      'legal Live TV runtime provider reaches channel guide stream resolver and player launch',
+      (tester) async {
     StreamSource? launched;
-    final controller = LiveTvController([LegalLiveDemoProvider()], resolver: legalResolver());
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: LiveTvScreen(
+    final controller =
+        LiveTvController([LegalLiveDemoProvider()], resolver: legalResolver());
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: LiveTvScreen(
       controller: controller,
-      playerLauncher: (_, __, source) async { launched = source; },
+      playerLauncher: (_, __, source) async {
+        launched = source;
+      },
     ))));
     await tester.pumpAndSettle();
     expect(find.text('Big Buck Bunny'), findsOneWidget);
