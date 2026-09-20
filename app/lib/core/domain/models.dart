@@ -3,10 +3,25 @@ enum MediaKind { movie, series, live }
 enum StreamProtocol { hls, mp4, dash, embed }
 
 class MediaItem {
-  const MediaItem({required this.id, required this.title, required this.kind});
+  const MediaItem({
+    required this.id,
+    required this.title,
+    required this.kind,
+    this.posterUrl,
+    this.backdropUrl,
+    this.overview,
+    this.year,
+    this.rating,
+  });
+
   final String id;
   final String title;
   final MediaKind kind;
+  final String? posterUrl;
+  final String? backdropUrl;
+  final String? overview;
+  final int? year;
+  final double? rating;
 }
 
 class StreamSource {
