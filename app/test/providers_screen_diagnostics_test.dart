@@ -23,7 +23,7 @@ void main() {
     await tester.tap(find.byKey(const Key('provider-probe-failing')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('providers-error')), findsOneWidget);
-    expect(find.text('Provider health probe failed safely'), findsOneWidget);
+    expect(find.text('فشل فحص صحة المزود بأمان'), findsOneWidget);
   });
   testWidgets('Tools / Providers exposes registered provider diagnostics', (tester) async {
     final controller = ProvidersController(
@@ -38,12 +38,12 @@ void main() {
 
     expect(find.byKey(const Key('providers-list')), findsOneWidget);
     expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
-    expect(find.textContaining('Health 0.00'), findsOneWidget);
+    expect(find.textContaining('الصحة 0.00'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('provider-probe-legal-demo')));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Health 1.00'), findsOneWidget);
+    expect(find.textContaining('الصحة 1.00'), findsOneWidget);
     expect(find.byKey(const Key('providers-error')), findsNothing);
 
     controller.recordProbe('legal-demo', success: false, latencyMs: 1);
