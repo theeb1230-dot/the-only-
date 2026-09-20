@@ -188,10 +188,10 @@ class _CinemaScreenState extends State<CinemaScreen> {
             const SizedBox(height: 10),
             for (final item in _results)
               Card(
-                key: Key('cinema-item-${item.id}'),
                 clipBehavior: Clip.antiAlias,
                 margin: const EdgeInsets.only(bottom: 14),
                 child: InkWell(
+                  key: Key('cinema-item-${item.id}'),
                   onTap: () => _open(item),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
