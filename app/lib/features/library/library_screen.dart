@@ -49,7 +49,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           builder: (context, snapshot) {
             final entries = snapshot.data ?? const [];
             if (entries.isEmpty) return const ListTile(key: Key('history-empty'), title: Text('لا يوجد سجل مشاهدة بعد'));
-            return Column(children: [for (final entry in entries) ListTile(key: Key('history-${entry.item.id}'), title: Text(entry.item.title), subtitle: Text('Resume at ${entry.position.inSeconds}s'))]);
+            return Column(children: [for (final entry in entries) ListTile(key: Key('history-${entry.item.id}'), title: Text(entry.item.title), subtitle: Text('استئناف عند ${entry.position.inSeconds} ث'))]);
           },
         ),
         const Divider(),
