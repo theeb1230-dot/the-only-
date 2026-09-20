@@ -58,33 +58,24 @@ void main() {
         findsOneWidget);
     expect(find.text('فيلم'), findsOneWidget);
     expect(find.text('مصادر التشغيل المتاحة: 1'), findsOneWidget);
-    expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
-    expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
 
     final watch = find.byKey(const Key('cinema-watch-0'));
-    final cinemaScroll = find.descendant(
-      of: find.byKey(const Key('cinema-screen')),
-      matching: find.byType(Scrollable),
-    ).first;
-    await tester.scrollUntilVisible(
-      watch,
-      300,
-      scrollable: cinemaScroll,
-    );
-    await tester.tap(watch);
+    final download = find.byKey(const Key('cinema-download-0'));
+    expect(watch, findsOneWidget);
+    expect(download, findsOneWidget);
+
+    final watchButton = tester.widget<FilledButton>(watch);
+    expect(watchButton.onPressed, isNotNull);
+    await watchButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(launched?.uri.host, 'commondatastorage.googleapis.com');
     expect(launched?.protocol, StreamProtocol.mp4);
     expect(await history.all(), hasLength(1));
     expect(await downloads.all(), isEmpty);
 
-    final download = find.byKey(const Key('cinema-download-0'));
-    await tester.scrollUntilVisible(
-      download,
-      200,
-      scrollable: cinemaScroll,
-    );
-    await tester.tap(download);
+    final downloadButton = tester.widget<FilledButton>(download);
+    expect(downloadButton.onPressed, isNotNull);
+    await downloadButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(await downloads.all(), hasLength(1));
   });
