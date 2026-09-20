@@ -35,7 +35,7 @@ void main() {
     var watches = 0; var downloads = 0;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller, onWatch: (_) async => watches++, onDownload: (_) async => downloads++))));
     await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://example.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pumpAndSettle();
-    expect(find.text('Supported'), findsOneWidget); expect(find.byKey(const Key('resolver-result-0')), findsOneWidget); expect(find.byKey(const Key('resolver-result-1')), findsOneWidget);
+    expect(find.text('مدعوم'), findsOneWidget); expect(find.byKey(const Key('resolver-result-0')), findsOneWidget); expect(find.byKey(const Key('resolver-result-1')), findsOneWidget);
     expect(find.byKey(const Key('resolver-download-0')), findsOneWidget); expect(find.byKey(const Key('resolver-download-1')), findsNothing);
     await tester.tap(find.byKey(const Key('resolver-watch-1'))); await tester.pump(); expect(watches, 1); expect(downloads, 0);
     await tester.tap(find.byKey(const Key('resolver-download-0'))); await tester.pump(); expect(downloads, 1);
@@ -53,6 +53,6 @@ void main() {
     final controller = fixtureController();
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller))));
     await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://unsupported.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pump();
-    expect(find.text('Unsupported'), findsOneWidget); expect(find.byKey(const Key('resolver-result-0')), findsNothing);
+    expect(find.text('غير مدعوم'), findsOneWidget); expect(find.byKey(const Key('resolver-result-0')), findsNothing);
   });
 }
