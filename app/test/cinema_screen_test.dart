@@ -60,6 +60,7 @@ void main() {
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('cinema-empty')), findsOneWidget);
+    expect(find.text('لم يتم العثور على نتائج'), findsOneWidget);
     expect(find.byKey(const Key('cinema-loading')), findsNothing);
     expect(find.byKey(const Key('cinema-error')), findsNothing);
   });
@@ -110,6 +111,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
     expect(history.entries, hasLength(1), reason: 'Download must remain independent from Watch/history');
-    expect(find.text('Download queued'), findsOneWidget);
+    expect(find.text('تمت إضافة التنزيل إلى قائمة الانتظار'), findsOneWidget);
   });
 }
