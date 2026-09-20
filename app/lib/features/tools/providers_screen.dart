@@ -106,7 +106,7 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
                 child: ListTile(
                   title: Text(_displayName(state.id)),
                   subtitle: Text(
-                    'الحالة: ${_healthLabel(state)} • الأولوية ${state.priority} • الدرجة ${state.health.score.toStringAsFixed(2)}\nالمعرّف: ${state.id}',
+                    'الصحة: ${_healthLabel(state)} • الأولوية ${state.priority} • الدرجة ${state.health.score.toStringAsFixed(2)}\nالمعرّف: ${state.id}',
                   ),
                   isThreeLine: true,
                   leading: Switch(
