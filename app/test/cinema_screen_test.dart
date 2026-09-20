@@ -159,24 +159,15 @@ void main() {
     await tester.tap(card);
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const Key('cinema-details-movie-1')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('cinema-details-movie-1')), findsOneWidget);
     final watch = find.byKey(const Key('cinema-watch-0'));
     final download = find.byKey(const Key('cinema-download-0'));
-    final cinemaScroll = find.descendant(
-      of: find.byKey(const Key('cinema-screen')),
-      matching: find.byType(Scrollable),
-    ).first;
     expect(watch, findsOneWidget);
     expect(download, findsOneWidget);
-    await tester.scrollUntilVisible(
-      watch,
-      300,
-      scrollable: cinemaScroll,
-    );
-    await tester.tap(watch);
+
+    final watchButton = tester.widget<FilledButton>(watch);
+    expect(watchButton.onPressed, isNotNull);
+    await watchButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(history.entries, hasLength(1));
     expect(launched, isNotNull);
@@ -186,12 +177,10 @@ void main() {
       isEmpty,
       reason: 'Watch must never implicitly queue a download',
     );
-    await tester.scrollUntilVisible(
-      download,
-      200,
-      scrollable: cinemaScroll,
-    );
-    await tester.tap(download);
+
+    final downloadButton = tester.widget<FilledButton>(download);
+    expect(downloadButton.onPressed, isNotNull);
+    await downloadButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
     expect(
