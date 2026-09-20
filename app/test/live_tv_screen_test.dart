@@ -59,6 +59,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: LiveTvScreen(controller: LiveTvController([EmptyLiveProvider()], resolver: resolver)))));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('live-tv-empty')), findsOneWidget);
+    expect(find.text('لا توجد قنوات متاحة'), findsOneWidget);
     expect(find.byKey(const Key('live-tv-loading')), findsNothing);
     expect(find.byKey(const Key('live-tv-error')), findsNothing);
   });
