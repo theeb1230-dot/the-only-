@@ -45,8 +45,8 @@ void main() {
     await tester.tap(find.byKey(const Key('cinema-item-mdn-flower')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('cinema-details-mdn-flower')), findsOneWidget);
-    expect(find.text('Movie'), findsOneWidget);
-    expect(find.text('1 playback source available'), findsOneWidget);
+    expect(find.text('فيلم'), findsOneWidget);
+    expect(find.text('مصادر التشغيل المتاحة: 1'), findsOneWidget);
     expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
     expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
 
