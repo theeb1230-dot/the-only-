@@ -46,7 +46,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller))));
     await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://example.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pumpAndSettle();
     expect(find.byKey(const Key('resolver-error')), findsOneWidget);
-    expect(find.text('فشل التحليل بأمان'), findsOneWidget);
+    expect(find.text('لم يُرجع المحلل أي مصادر تشغيل'), findsOneWidget);
     expect(find.byKey(const Key('resolver-loading')), findsNothing);
     expect(find.byKey(const Key('resolver-result-0')), findsNothing);
   });
