@@ -165,12 +165,16 @@ void main() {
     );
     final watch = find.byKey(const Key('cinema-watch-0'));
     final download = find.byKey(const Key('cinema-download-0'));
+    final cinemaScroll = find.descendant(
+      of: find.byKey(const Key('cinema-screen')),
+      matching: find.byType(Scrollable),
+    ).first;
     expect(watch, findsOneWidget);
     expect(download, findsOneWidget);
     await tester.scrollUntilVisible(
       watch,
       300,
-      scrollable: find.byKey(const Key('cinema-screen')),
+      scrollable: cinemaScroll,
     );
     await tester.tap(watch);
     await tester.pumpAndSettle();
@@ -185,7 +189,7 @@ void main() {
     await tester.scrollUntilVisible(
       download,
       200,
-      scrollable: find.byKey(const Key('cinema-screen')),
+      scrollable: cinemaScroll,
     );
     await tester.tap(download);
     await tester.pumpAndSettle();
