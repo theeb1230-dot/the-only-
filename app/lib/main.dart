@@ -31,7 +31,7 @@ import 'features/system_diagnostics/system_diagnostics_screen.dart';
 import 'features/tools/providers_controller.dart';
 import 'features/tools/providers_screen.dart';
 Future<void> main() async { WidgetsFlutterBinding.ensureInitialized(); final p=await SharedPreferences.getInstance(); final store=PersistentLibraryStore(p); await store.initialize(); runApp(TheOnlyApp(store:store)); }
-class TheOnlyApp extends StatelessWidget { const TheOnlyApp({super.key,required this.store}); final PersistentLibraryStore store; @override Widget build(BuildContext context)=>MaterialApp(debugShowCheckedModeBanner:false,title:'The Only',theme:ThemeData.dark(useMaterial3:true),home:TheOnlyShell(store:store)); }
+class TheOnlyApp extends StatelessWidget { const TheOnlyApp({super.key,required this.store}); final PersistentLibraryStore store; @override Widget build(BuildContext context)=>MaterialApp(debugShowCheckedModeBanner:false,title:'The Only',theme:ThemeData.dark(useMaterial3:true),locale:const Locale('ar'),supportedLocales:const [Locale('ar'),Locale('en')],home:TheOnlyShell(store:store)); }
 class TheOnlyShell extends StatefulWidget { const TheOnlyShell({super.key,required this.store}); final PersistentLibraryStore store; @override State<TheOnlyShell> createState()=>_TheOnlyShellState(); }
 class _TheOnlyShellState extends State<TheOnlyShell>{
  late final SectionSettings settings=SectionSettings(preferences:widget.store.preferences); final ProviderRegistry providers=ProviderRegistry([LegalDemoProvider()]); final health=ProviderHealthStore();
@@ -43,7 +43,7 @@ class _TheOnlyShellState extends State<TheOnlyShell>{
  late final SourcesController sources=SourcesController(providers,resolver:resolverCoordinator,downloads:downloads); late final ResolversController resolverController=ResolversController(resolvers,resolverCoordinator);
  late final ProvidersController providerTools=ProvidersController(providers,health,const [],preferencesStore:widget.store.preferences); late final SystemDiagnosticsController diagnostics=SystemDiagnosticsController(RuntimeSystemSnapshotProvider());
  SectionId selected=SectionId.cinema;
- static const labels=<SectionId,String>{SectionId.cinema:'Cinema',SectionId.liveTv:'Live TV',SectionId.sources:'Sources',SectionId.resolvers:'Resolvers',SectionId.tools:'Tools / Providers',SectionId.optional:'System Diagnostics'};
+ static const labels=<SectionId,String>{SectionId.cinema:'السينما',SectionId.liveTv:'البث المباشر',SectionId.sources:'المصادر',SectionId.resolvers:'المحللات',SectionId.tools:'المزودون',SectionId.optional:'تشخيص النظام'};
  @override void initState(){super.initState();downloadTransfer.recoverInterrupted();}
  void openSettings(){Navigator.of(context).push(MaterialPageRoute(builder:(_)=>SectionSettingsScreen(settings:settings,onChanged:(id,enabled){setState((){if(!enabled&&selected==id)selected=SectionId.cinema;});}))).then((_){if(mounted)setState((){});});}
  void openLibrary(){Navigator.of(context).push(MaterialPageRoute(builder:(_)=>Scaffold(appBar:AppBar(title:const Text('Library')),body:LibraryScreen(favorites:favorites,history:history,downloads:downloads,transfer:downloadTransfer))));}
