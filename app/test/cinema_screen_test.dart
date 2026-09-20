@@ -17,11 +17,7 @@ class FixtureProvider implements MediaProvider {
   String get id => 'fixture';
   @override
   Future<List<MediaItem>> search(String query) async => const [
-        MediaItem(
-          id: 'movie-1',
-          title: 'Fixture Movie',
-          kind: MediaKind.movie,
-        ),
+        MediaItem(id: 'movie-1', title: 'Fixture Movie', kind: MediaKind.movie),
       ];
   @override
   Future<ProviderResult> sourcesFor(MediaItem item) async => ProviderResult(
@@ -44,8 +40,7 @@ class FixtureFavorites implements FavoritesRepository {
   @override
   Future<void> add(MediaItem item) async => items.add(item);
   @override
-  Future<void> remove(String mediaId) async =>
-      items.removeWhere((item) => item.id == mediaId);
+  Future<void> remove(String mediaId) async => items.removeWhere((item) => item.id == mediaId);
 }
 
 class FixtureHistory implements HistoryRepository {
@@ -68,8 +63,7 @@ class FixtureDownloads implements DownloadsRepository {
     jobs.add(job);
   }
   @override
-  Future<void> remove(String id) async =>
-      jobs.removeWhere((job) => job.id == id);
+  Future<void> remove(String id) async => jobs.removeWhere((job) => job.id == id);
 }
 
 class EmptyProvider implements MediaProvider {
@@ -78,27 +72,20 @@ class EmptyProvider implements MediaProvider {
   @override
   Future<List<MediaItem>> search(String query) async => const [];
   @override
-  Future<ProviderResult> sourcesFor(MediaItem item) async =>
-      ProviderResult(providerId: id, sources: const []);
+  Future<ProviderResult> sourcesFor(MediaItem item) async => ProviderResult(providerId: id, sources: const []);
 }
 
 void main() {
-  testWidgets('Cinema exposes truthful empty search state after loading',
-      (tester) async {
+  testWidgets('Cinema exposes truthful empty search state after loading', (tester) async {
     final controller = CinemaController(
       providers: [EmptyProvider()],
       favorites: FixtureFavorites(),
       history: FixtureHistory(),
       downloads: FixtureDownloads(),
     );
-    await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: CinemaScreen(controller: controller))),
-    );
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CinemaScreen(controller: controller))));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('cinema-search-field')),
-      'missing',
-    );
+    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'missing');
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('cinema-empty')), findsOneWidget);
@@ -107,8 +94,7 @@ void main() {
     expect(find.byKey(const Key('cinema-error')), findsNothing);
   });
 
-  testWidgets('Cinema exposes separate resolver-backed Watch and Download actions',
-      (tester) async {
+  testWidgets('Cinema exposes separate resolver-backed Watch and Download actions', (tester) async {
     final favorites = FixtureFavorites();
     final history = FixtureHistory();
     final downloads = FixtureDownloads();
@@ -118,10 +104,7 @@ void main() {
       favorites: favorites,
       history: history,
       downloads: downloads,
-      resolver: ResolverCoordinator(
-        registry,
-        const StreamValidator(UrlPolicy()),
-      ),
+      resolver: ResolverCoordinator(registry, const StreamValidator(UrlPolicy())),
     );
     StreamSource? launched;
     await tester.pumpWidget(
@@ -129,18 +112,13 @@ void main() {
         home: Scaffold(
           body: CinemaScreen(
             controller: controller,
-            playerLauncher: (_, __, source) async {
-              launched = source;
-            },
+            playerLauncher: (_, __, source) async { launched = source; },
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('cinema-search-field')),
-      'fixture',
-    );
+    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'fixture');
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.text('Fixture Movie'), findsOneWidget);
@@ -167,30 +145,19 @@ void main() {
 
     final watchButton = tester.widget<FilledButton>(watch);
     expect(watchButton.onPressed, isNotNull);
-    await watchButton.onPressed!.call();
+    watchButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(history.entries, hasLength(1));
     expect(launched, isNotNull);
     expect(launched!.protocol, StreamProtocol.mp4);
-    expect(
-      downloads.jobs,
-      isEmpty,
-      reason: 'Watch must never implicitly queue a download',
-    );
+    expect(downloads.jobs, isEmpty, reason: 'Watch must never implicitly queue a download');
 
     final downloadButton = tester.widget<FilledButton>(download);
     expect(downloadButton.onPressed, isNotNull);
-    await downloadButton.onPressed!.call();
+    downloadButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
-    expect(
-      history.entries,
-      hasLength(1),
-      reason: 'Download must remain independent from Watch/history',
-    );
-    expect(
-      find.text('تمت إضافة التنزيل إلى قائمة الانتظار'),
-      findsOneWidget,
-    );
+    expect(history.entries, hasLength(1), reason: 'Download must remain independent from Watch/history');
+    expect(find.text('تمت إضافة التنزيل إلى قائمة الانتظار'), findsOneWidget);
   });
 }
