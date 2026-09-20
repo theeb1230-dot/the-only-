@@ -33,7 +33,7 @@ void main() {
     expect(find.text('استئناف عند 42 ث'), findsOneWidget);
     expect(find.byKey(const Key('download-persisted-download')), findsOneWidget);
     expect(find.text('في الانتظار'), findsOneWidget);
-    expect(find.byTooltip('حذف من المفضلة'), findsOneWidget);
-    expect(find.byTooltip('حذف التنزيل'), findsOneWidget);
+    expect(find.byKey(const Key('favorite-remove-persisted')), findsOneWidget);
+    expect(find.byKey(const Key('download-remove-persisted-download')), findsOneWidget);
   });
 }
