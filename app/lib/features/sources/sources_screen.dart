@@ -153,7 +153,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
           ),
           if (_busy) const LinearProgressIndicator(key: Key('sources-loading')),
           if (_error != null) Semantics(liveRegion: true, child: Text(_error!, key: const Key('sources-error'))),
-          if (_results.isEmpty && !_busy && _query.text.isNotEmpty)
+          if (_results.isEmpty && !_busy && _error == null && _query.text.trim().isNotEmpty)
             const Text('No results', key: Key('sources-empty')),
           for (final item in _results)
             ListTile(
@@ -165,7 +165,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
           if (_selected case final item?) ...[
             const Divider(),
             Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-            if (_sources.isEmpty && !_busy) const Text('No sources available', key: Key('sources-streams-empty')),
+            if (_sources.isEmpty && !_busy && _error == null) const Text('No sources available', key: Key('sources-streams-empty')),
             for (final entry in _sources.entries) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 12),
