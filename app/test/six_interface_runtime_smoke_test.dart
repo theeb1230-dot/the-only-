@@ -52,23 +52,28 @@ void main() {
       controller: controller,
       playerLauncher: (_, __, source) async => watched = source,
     ))));
-    await tester.enterText(find.byKey(const Key('sources-search-field')), 'Flower');
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('sources-search-field')), 'Bunny');
     await tester.tap(find.byKey(const Key('sources-search-button')));
     await tester.pumpAndSettle();
-    expect(find.text('MDN Flower Sample'), findsOneWidget);
+    expect(find.text('Big Buck Bunny'), findsOneWidget);
     expect(find.byKey(const Key('sources-loading')), findsNothing);
     expect(find.byKey(const Key('sources-error')), findsNothing);
-    await tester.tap(find.byKey(const Key('sources-item-mdn-flower')));
+    await tester.tap(find.byKey(const Key('sources-item-big-buck-bunny')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('sources-watch-legal-demo-0')), findsOneWidget);
     expect(find.byKey(const Key('sources-download-legal-demo-0')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('sources-watch-legal-demo-0')));
+    final watch = find.byKey(const Key('sources-watch-legal-demo-0'));
+    await tester.ensureVisible(watch);
+    await tester.tap(watch);
     await tester.pumpAndSettle();
-    expect(watched?.uri.host, 'mdn.github.io');
+    expect(watched?.uri.host, 'commondatastorage.googleapis.com');
     expect(await downloads.all(), isEmpty);
 
-    await tester.tap(find.byKey(const Key('sources-download-legal-demo-0')));
+    final download = find.byKey(const Key('sources-download-legal-demo-0'));
+    await tester.ensureVisible(download);
+    await tester.tap(download);
     await tester.pumpAndSettle();
     expect(await downloads.all(), hasLength(1));
   });
