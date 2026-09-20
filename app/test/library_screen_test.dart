@@ -31,6 +31,6 @@ void main() {
     expect(find.text('التنزيلات'), findsOneWidget);
     expect(find.text('استئناف عند 42 ث'), findsOneWidget);
     expect(find.text('persisted.mp4'), findsOneWidget);
-    expect(find.text('queued'), findsOneWidget);
+    expect(find.text('في الانتظار'), findsOneWidget);
   });
 }
