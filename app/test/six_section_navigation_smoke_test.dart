@@ -15,10 +15,6 @@ void main() {
   testWidgets(
     'all enabled product sections navigate in one shell and library back preserves state',
     (tester) async {
-      // SectionSettings persists feature gates as
-      // the_only.section.enabled.<section>. Keep the optional clean-room
-      // surface disabled by default in production and enable it explicitly
-      // only for this deterministic smoke.
       SharedPreferences.setMockInitialValues({
         'the_only.section.enabled.optional': true,
       });
@@ -27,7 +23,7 @@ void main() {
       );
       await store.initialize();
       await tester.pumpWidget(TheOnlyApp(store: store));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('cinema-screen')), findsOneWidget);
       await tapDestination(tester, 'البث المباشر');
@@ -40,10 +36,7 @@ void main() {
       expect(find.byKey(const Key('providers-list')), findsOneWidget);
       expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
       await tapDestination(tester, 'تشخيص النظام');
-      expect(
-        find.byKey(const Key('system-diagnostics-screen')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
 
       final libraryButton = tester.widget<IconButton>(
         find.byKey(const Key('library-button')),
@@ -51,12 +44,9 @@ void main() {
       libraryButton.onPressed?.call();
       await tester.pumpAndSettle();
       expect(find.text('المكتبة'), findsWidgets);
-      await tester.pageBack();
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const Key('system-diagnostics-screen')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('system-diagnostics-screen')), findsOneWidget);
     },
   );
 }
