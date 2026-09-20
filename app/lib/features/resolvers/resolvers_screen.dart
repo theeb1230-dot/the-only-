@@ -31,9 +31,9 @@ class _ResolversScreenState extends State<ResolversScreen> {
   @override Widget build(BuildContext context) => ListView(key: const Key('resolvers-screen'), padding: const EdgeInsets.all(16), children: [
     TextField(key: const Key('resolver-uri'), controller: _input, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'URI to resolve')),
     const SizedBox(height: 8), FilledButton.icon(key: const Key('resolver-run'), onPressed: _busy ? null : _resolve, icon: const Icon(Icons.link), label: const Text('Resolve')),
-    if (_busy) const LinearProgressIndicator(),
+    if (_busy) const LinearProgressIndicator(key: Key('resolver-loading')),
     if (_supported != null) Text(_supported! ? 'Supported' : 'Unsupported', key: const Key('resolver-support')),
-    if (_error != null) Text(_error!, key: const Key('resolver-error')),
+    if (_error != null) Semantics(liveRegion: true, child: Text(_error!, key: const Key('resolver-error'))),
     for (var i = 0; i < _results.length; i++) ListTile(key: Key('resolver-result-$i'), title: Text(_results[i].quality ?? _results[i].protocol.name.toUpperCase()), subtitle: Text('${_results[i].providerId} • ${_results[i].protocol.name}'), trailing: Wrap(spacing: 8, children: [
       FilledButton(key: Key('resolver-watch-$i'), onPressed: widget.onWatch == null ? null : () => widget.onWatch!(_results[i]), child: const Text('Watch')),
       if (isDownloadable(_results[i])) OutlinedButton(key: Key('resolver-download-$i'), onPressed: widget.onDownload == null ? null : () => widget.onDownload!(_results[i]), child: const Text('Download')),
