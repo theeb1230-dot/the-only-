@@ -25,7 +25,8 @@ void main() {
     await tester.pumpWidget(MaterialApp(home:Scaffold(body:LibraryScreen(favorites:PersistentFavoritesRepository(store),history:PersistentHistoryRepository(store),downloads:PersistentDownloadsRepository(store)))));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('favorite-persisted')), findsOneWidget);\n    expect(find.byKey(const Key('history-persisted')), findsOneWidget);
+    expect(find.byKey(const Key('favorite-persisted')), findsOneWidget);
+    expect(find.byKey(const Key('history-persisted')), findsOneWidget);
     expect(find.text('المفضلة'), findsOneWidget);
     expect(find.text('السجل'), findsOneWidget);
     expect(find.text('التنزيلات'), findsOneWidget);
