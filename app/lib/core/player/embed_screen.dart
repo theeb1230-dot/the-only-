@@ -58,7 +58,7 @@ class _EmbedScreenState extends State<EmbedScreen> {
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(_error!, key: const Key('embed-error')),
+                    child: Semantics(liveRegion: true, child: Text(_error!, key: const Key('embed-error'))),
                   ),
                 )
               : WebViewWidget(

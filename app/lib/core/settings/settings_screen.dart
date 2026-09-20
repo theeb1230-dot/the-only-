@@ -13,15 +13,16 @@ class SectionSettingsScreen extends StatefulWidget {
 }
 
 class _SectionSettingsScreenState extends State<SectionSettingsScreen> {
+  static const labels=<SectionId,String>{SectionId.cinema:'السينما',SectionId.liveTv:'البث المباشر',SectionId.sources:'المصادر',SectionId.resolvers:'المحللات',SectionId.tools:'المزودون',SectionId.optional:'تشخيص النظام'};
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Sections')),
+        appBar: AppBar(title: const Text('الأقسام')),
         body: ListView(
           children: [
             for (final id in SectionId.values)
               SwitchListTile(
                 key: Key('section-${id.name}'),
-                title: Text(id.name),
+                title: Text(labels[id]!),
                 value: widget.settings.isEnabled(id),
                 onChanged: (value) {
                   setState(() => widget.settings.setEnabled(id, value));

@@ -25,9 +25,15 @@ void main() {
     await tester.pumpWidget(MaterialApp(home:Scaffold(body:LibraryScreen(favorites:PersistentFavoritesRepository(store),history:PersistentHistoryRepository(store),downloads:PersistentDownloadsRepository(store)))));
     await tester.pumpAndSettle();
 
-    expect(find.text('Persisted Movie'), findsNWidgets(2));
-    expect(find.text('Resume at 42s'), findsOneWidget);
-    expect(find.text('persisted.mp4'), findsOneWidget);
-    expect(find.text('queued'), findsOneWidget);
+    expect(find.byKey(const Key('favorite-persisted')), findsOneWidget);
+    expect(find.byKey(const Key('history-persisted')), findsOneWidget);
+    expect(find.text('المفضلة'), findsOneWidget);
+    expect(find.text('السجل'), findsOneWidget);
+    expect(find.text('التنزيلات'), findsOneWidget);
+    expect(find.text('استئناف عند 42 ث'), findsOneWidget);
+    expect(find.byKey(const Key('download-persisted-download')), findsOneWidget);
+    expect(find.text('في الانتظار'), findsOneWidget);
+    expect(find.byKey(const Key('favorite-remove-persisted')), findsOneWidget);
+    expect(find.byKey(const Key('download-remove-persisted-download')), findsOneWidget);
   });
 }

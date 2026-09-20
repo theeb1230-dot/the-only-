@@ -55,6 +55,21 @@ class ScreenSourceProvider implements MediaProvider {
 }
 
 void main() {
+  testWidgets('Sources empty state is exclusive after all providers fail', (tester) async {
+    final controller = SourcesController(
+      ProviderRegistry([ScreenSourceProvider('broken', fail: true)]),
+      resolver: ResolverCoordinator(ResolverRegistry(const [DirectMediaResolver()]), const StreamValidator(UrlPolicy())),
+      downloads: MemoryDownloadsRepository(),
+    );
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SourcesScreen(controller: controller))));
+    await tester.enterText(find.byKey(const Key('sources-search-field')), 'missing');
+    await tester.tap(find.byKey(const Key('sources-search-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('sources-empty')), findsOneWidget);
+    expect(find.byKey(const Key('sources-loading')), findsNothing);
+    expect(find.byKey(const Key('sources-error')), findsNothing);
+  });
+
   testWidgets(
     'Sources resolves Watch and keeps direct Download separate',
     (tester) async {

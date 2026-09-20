@@ -13,13 +13,20 @@ class ProvidersScreen extends StatefulWidget {
 
 class _ProvidersScreenState extends State<ProvidersScreen> {
   final Set<String> _probing = <String>{};
+  String? _error;
 
   List<ProviderToolState> get _states => widget.controller.states();
 
   Future<void> _probe(String id) async {
-    setState(() => _probing.add(id));
+    setState(() { _probing.add(id); _error = null; });
     try {
-      await widget.controller.probe(id);
+      final before = widget.controller.states().firstWhere((state) => state.id == id).health;
+      final health = await widget.controller.probe(id);
+      if (health.failures > before.failures) {
+        if (mounted) setState(() => _error = 'فشل فحص صحة المزود بأمان');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Provider health probe failed safely');
     } finally {
       if (mounted) setState(() => _probing.remove(id));
     }
@@ -39,11 +46,13 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
     if (states.isEmpty) {
       return const Center(
         key: Key('providers-empty'),
-        child: Text('No providers registered.'),
+        child: Text('لا توجد مزودات مسجلة.'),
       );
     }
 
-    return ListView.builder(
+    return Column(children: [
+      if (_error != null) Semantics(liveRegion: true, child: Text(_error!, key: const Key('providers-error'))),
+      Expanded(child: ListView.builder(
       key: const Key('providers-list'),
       padding: const EdgeInsets.all(16),
       itemCount: states.length,
@@ -54,7 +63,7 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
           child: ListTile(
             title: Text(state.id),
             subtitle: Text(
-              'Priority ${state.priority} • Health ${state.health.score.toStringAsFixed(2)}',
+              'الأولوية ${state.priority} • الصحة ${state.health.score.toStringAsFixed(2)}',
             ),
             leading: Switch(
               key: Key('provider-enabled-${state.id}'),
@@ -66,7 +75,7 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
               children: [
                 IconButton(
                   key: Key('provider-probe-${state.id}'),
-                  tooltip: 'Run health probe',
+                  tooltip: 'فحص صحة المزود',
                   onPressed: _probing.contains(state.id) ? null : () => _probe(state.id),
                   icon: _probing.contains(state.id)
                       ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
@@ -74,13 +83,13 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
                 ),
                 IconButton(
                   key: Key('provider-priority-down-${state.id}'),
-                  tooltip: 'Lower priority',
+                  tooltip: 'خفض الأولوية',
                   onPressed: () => _changePriority(state, -1),
                   icon: const Icon(Icons.arrow_downward),
                 ),
                 IconButton(
                   key: Key('provider-priority-up-${state.id}'),
-                  tooltip: 'Raise priority',
+                  tooltip: 'رفع الأولوية',
                   onPressed: () => _changePriority(state, 1),
                   icon: const Icon(Icons.arrow_upward),
                 ),
@@ -89,6 +98,7 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
           ),
         );
       },
-    );
+    )),
+    ]);
   }
 }

@@ -16,6 +16,15 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
+  String _downloadState(DownloadJob job) => switch (job.state) {
+    DownloadState.queued => 'في الانتظار',
+    DownloadState.running => 'جارٍ التنزيل ${(job.progress * 100).round()}%',
+    DownloadState.paused => 'متوقف مؤقتًا',
+    DownloadState.completed => 'مكتمل',
+    DownloadState.failed => 'فشل',
+    DownloadState.cancelled => 'ملغى',
+  };
+
   Future<void> _refresh() async => setState(() {});
 
   Future<void> _start(DownloadJob job) async {
@@ -33,32 +42,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
       key: const Key('library-screen'),
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Favorites', style: Theme.of(context).textTheme.titleLarge),
+        Text('المفضلة', style: Theme.of(context).textTheme.titleLarge),
         FutureBuilder(
           future: widget.favorites.all(),
           builder: (context, snapshot) {
             final items = snapshot.data ?? const [];
-            if (items.isEmpty) return const ListTile(key: Key('favorites-empty'), title: Text('No favorites yet'));
-            return Column(children: [for (final item in items) ListTile(key: Key('favorite-${item.id}'), title: Text(item.title), subtitle: Text(item.kind.name), trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async { await widget.favorites.remove(item.id); await _refresh(); }))]);
+            if (items.isEmpty) return const ListTile(key: Key('favorites-empty'), title: Text('لا توجد عناصر مفضلة بعد'));
+            return Column(children: [for (final item in items) ListTile(key: Key('favorite-${item.id}'), title: Text(item.title), subtitle: Text(item.kind.name), trailing: IconButton(key: Key('favorite-remove-${item.id}'), tooltip: 'حذف من المفضلة', icon: const Icon(Icons.delete_outline), onPressed: () async { await widget.favorites.remove(item.id); await _refresh(); }))]);
           },
         ),
         const Divider(),
-        Text('History', style: Theme.of(context).textTheme.titleLarge),
+        Text('السجل', style: Theme.of(context).textTheme.titleLarge),
         FutureBuilder(
           future: widget.history.all(),
           builder: (context, snapshot) {
             final entries = snapshot.data ?? const [];
-            if (entries.isEmpty) return const ListTile(key: Key('history-empty'), title: Text('No watch history yet'));
-            return Column(children: [for (final entry in entries) ListTile(key: Key('history-${entry.item.id}'), title: Text(entry.item.title), subtitle: Text('Resume at ${entry.position.inSeconds}s'))]);
+            if (entries.isEmpty) return const ListTile(key: Key('history-empty'), title: Text('لا يوجد سجل مشاهدة بعد'));
+            return Column(children: [for (final entry in entries) ListTile(key: Key('history-${entry.item.id}'), title: Text(entry.item.title), subtitle: Text('استئناف عند ${entry.position.inSeconds} ث'))]);
           },
         ),
         const Divider(),
-        Text('Downloads', style: Theme.of(context).textTheme.titleLarge),
+        Text('التنزيلات', style: Theme.of(context).textTheme.titleLarge),
         FutureBuilder(
           future: widget.downloads.all(),
           builder: (context, snapshot) {
             final jobs = snapshot.data ?? const <DownloadJob>[];
-            if (jobs.isEmpty) return const ListTile(key: Key('downloads-empty'), title: Text('No downloads queued'));
+            if (jobs.isEmpty) return const ListTile(key: Key('downloads-empty'), title: Text('لا توجد تنزيلات في قائمة الانتظار'));
             return Column(children: [
               for (final job in jobs)
                 ListTile(
@@ -67,19 +76,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(job.state == DownloadState.running ? 'Downloading ${(job.progress * 100).round()}%' : job.state.name),
+                      Text(_downloadState(job)),
                       if (job.state == DownloadState.running) LinearProgressIndicator(value: job.progress > 0 ? job.progress : null),
                       if (job.error != null) Text(job.error!, key: Key('download-error-${job.id}')),
-                      if (job.state == DownloadState.completed && job.localPath != null) const Text('Saved for offline playback'),
+                      if (job.state == DownloadState.completed && job.localPath != null) const Text('محفوظ للمشاهدة دون اتصال'),
                     ],
                   ),
                   trailing: Wrap(
                     children: [
                       if (widget.transfer != null && {DownloadState.queued, DownloadState.failed, DownloadState.cancelled, DownloadState.paused}.contains(job.state))
-                        IconButton(key: Key('download-start-${job.id}'), tooltip: 'Start / Retry', icon: const Icon(Icons.download), onPressed: () => _start(job)),
+                        IconButton(key: Key('download-start-${job.id}'), tooltip: 'بدء / إعادة المحاولة', icon: const Icon(Icons.download), onPressed: () => _start(job)),
                       if (widget.transfer != null && job.state == DownloadState.running)
-                        IconButton(key: Key('download-cancel-${job.id}'), tooltip: 'Cancel', icon: const Icon(Icons.cancel_outlined), onPressed: () { widget.transfer!.cancel(job.id); }),
-                      IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async { widget.transfer?.cancel(job.id); await widget.downloads.remove(job.id); await _refresh(); }),
+                        IconButton(key: Key('download-cancel-${job.id}'), tooltip: 'إلغاء', icon: const Icon(Icons.cancel_outlined), onPressed: () { widget.transfer!.cancel(job.id); }),
+                      IconButton(key: Key('download-remove-${job.id}'), tooltip: 'حذف التنزيل', icon: const Icon(Icons.delete_outline), onPressed: () async { widget.transfer?.cancel(job.id); await widget.downloads.remove(job.id); await _refresh(); }),
                     ],
                   ),
                 ),

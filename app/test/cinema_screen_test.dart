@@ -46,7 +46,25 @@ class FixtureDownloads implements DownloadsRepository {
   @override Future<void> remove(String id) async => jobs.removeWhere((job) => job.id == id);
 }
 
+class EmptyProvider implements MediaProvider {
+  @override String get id => 'empty';
+  @override Future<List<MediaItem>> search(String query) async => const [];
+  @override Future<ProviderResult> sourcesFor(MediaItem item) async => ProviderResult(providerId: id, sources: const []);
+}
+
 void main() {
+  testWidgets('Cinema exposes truthful empty search state after loading', (tester) async {
+    final controller = CinemaController(providers:[EmptyProvider()],favorites:FixtureFavorites(),history:FixtureHistory(),downloads:FixtureDownloads());
+    await tester.pumpWidget(MaterialApp(home:Scaffold(body:CinemaScreen(controller:controller))));
+    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'missing');
+    await tester.tap(find.byKey(const Key('cinema-search-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('cinema-empty')), findsOneWidget);
+    expect(find.text('لم يتم العثور على نتائج'), findsOneWidget);
+    expect(find.byKey(const Key('cinema-loading')), findsNothing);
+    expect(find.byKey(const Key('cinema-error')), findsNothing);
+  });
+
   testWidgets('Cinema exposes separate resolver-backed Watch and Download actions', (tester) async {
     final favorites = FixtureFavorites();
     final history = FixtureHistory();
@@ -69,6 +87,9 @@ void main() {
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.text('Fixture Movie'), findsOneWidget);
+    expect(find.byKey(const Key('cinema-loading')), findsNothing);
+    expect(find.byKey(const Key('cinema-error')), findsNothing);
+    expect(find.byKey(const Key('cinema-empty')), findsNothing);
 
     await tester.tap(find.byKey(const Key('cinema-favorite-movie-1')));
     await tester.pump();
@@ -90,6 +111,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
     expect(history.entries, hasLength(1), reason: 'Download must remain independent from Watch/history');
-    expect(find.text('Download queued'), findsOneWidget);
+    expect(find.text('تمت إضافة التنزيل إلى قائمة الانتظار'), findsOneWidget);
   });
 }
