@@ -28,7 +28,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ProvidersScreen(controller: controller))));
     expect(find.byKey(const Key('providers-list')), findsOneWidget);
     expect(find.text('alpha'), findsOneWidget);
-    expect(find.textContaining('Health'), findsNWidgets(2));
+    expect(find.textContaining('الصحة'), findsNWidgets(2));
 
     await tester.tap(find.byKey(const Key('provider-enabled-alpha')));
     await tester.pump();
