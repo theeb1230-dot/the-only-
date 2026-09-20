@@ -147,6 +147,68 @@ class _CinemaScreenState extends State<CinemaScreen> {
     );
   }
 
+  Widget _details(MediaItem item) => Card(
+        key: Key('cinema-details-card-${item.id}'),
+        margin: const EdgeInsets.only(bottom: 14),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Semantics(
+                key: Key('cinema-details-${item.id}'),
+                container: true,
+                label: 'تفاصيل ${item.title}',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.title, style: Theme.of(context).textTheme.headlineSmall),
+                    Text(item.kind == MediaKind.series ? 'مسلسل' : 'فيلم'),
+                    Text('مصادر التشغيل المتاحة: ${_sources.length}'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (_sources.isEmpty && !_busy && _error == null)
+                const Text(
+                  'لا توجد مصادر تشغيل مباشرة',
+                  key: Key('cinema-sources-empty'),
+                ),
+              for (var i = 0; i < _sources.length; i++)
+                ListTile(
+                  key: Key('cinema-source-$i'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    _sources[i].quality ?? _sources[i].protocol.name.toUpperCase(),
+                  ),
+                  subtitle: Text(
+                    _sources[i].providerId == 'legal-demo'
+                        ? 'المكتبة العامة'
+                        : _sources[i].providerId,
+                  ),
+                  trailing: Wrap(
+                    spacing: 8,
+                    children: [
+                      FilledButton.icon(
+                        key: Key('cinema-watch-$i'),
+                        onPressed: _busy ? null : () => _watch(item, _sources[i]),
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('مشاهدة'),
+                      ),
+                      OutlinedButton.icon(
+                        key: Key('cinema-download-$i'),
+                        onPressed: () => _download(item, _sources[i]),
+                        icon: const Icon(Icons.download),
+                        label: const Text('تنزيل'),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) => ListView(
         key: const Key('cinema-screen'),
@@ -180,13 +242,16 @@ class _CinemaScreenState extends State<CinemaScreen> {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 36),
               child: Center(
-                child: Text('لا توجد نتائج متاحة الآن', key: Key('cinema-empty')),
+                child: Text(
+                  'لا توجد نتائج متاحة الآن',
+                  key: Key('cinema-empty'),
+                ),
               ),
             ),
           if (_results.isNotEmpty) ...[
             Text('المحتوى المتاح', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 10),
-            for (final item in _results)
+            for (final item in _results) ...[
               Card(
                 clipBehavior: Clip.antiAlias,
                 margin: const EdgeInsets.only(bottom: 14),
@@ -206,15 +271,23 @@ class _CinemaScreenState extends State<CinemaScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(item.title, style: Theme.of(context).textTheme.titleMedium),
+                                  Text(
+                                    item.title,
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
                                   const SizedBox(height: 4),
                                   Text([
                                     if (item.year != null) '${item.year}',
-                                    if (item.rating != null) '★ ${item.rating!.toStringAsFixed(1)}',
+                                    if (item.rating != null)
+                                      '★ ${item.rating!.toStringAsFixed(1)}',
                                   ].join('  •  ')),
                                   if (item.overview != null) ...[
                                     const SizedBox(height: 6),
-                                    Text(item.overview!, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                    Text(
+                                      item.overview!,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ],
                                 ],
                               ),
@@ -232,49 +305,8 @@ class _CinemaScreenState extends State<CinemaScreen> {
                   ),
                 ),
               ),
-          ],
-          if (_selected case final item?) ...[
-            const Divider(height: 32),
-            Semantics(
-              key: Key('cinema-details-${item.id}'),
-              container: true,
-              label: 'تفاصيل ${item.title}',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.title, style: Theme.of(context).textTheme.headlineSmall),
-                  Text(item.kind == MediaKind.series ? 'مسلسل' : 'فيلم'),
-                  Text('مصادر التشغيل المتاحة: ${_sources.length}'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (_sources.isEmpty && !_busy && _error == null)
-              const Text('لا توجد مصادر تشغيل مباشرة', key: Key('cinema-sources-empty')),
-            for (var i = 0; i < _sources.length; i++)
-              ListTile(
-                key: Key('cinema-source-$i'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(_sources[i].quality ?? _sources[i].protocol.name.toUpperCase()),
-                subtitle: Text(_sources[i].providerId == 'legal-demo' ? 'المكتبة العامة' : _sources[i].providerId),
-                trailing: Wrap(
-                  spacing: 8,
-                  children: [
-                    FilledButton.icon(
-                      key: Key('cinema-watch-$i'),
-                      onPressed: _busy ? null : () => _watch(item, _sources[i]),
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('مشاهدة'),
-                    ),
-                    OutlinedButton.icon(
-                      key: Key('cinema-download-$i'),
-                      onPressed: () => _download(item, _sources[i]),
-                      icon: const Icon(Icons.download),
-                      label: const Text('تنزيل'),
-                    ),
-                  ],
-                ),
-              ),
+              if (_selected?.id == item.id) _details(item),
+            ],
           ],
         ],
       );
