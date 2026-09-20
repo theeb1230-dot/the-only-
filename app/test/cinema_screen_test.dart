@@ -60,7 +60,7 @@ void main() {
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('cinema-empty')), findsOneWidget);
-    expect(find.text('لم يتم العثور على نتائج'), findsOneWidget);
+    expect(find.text('لا توجد نتائج متاحة الآن'), findsOneWidget);
     expect(find.byKey(const Key('cinema-loading')), findsNothing);
     expect(find.byKey(const Key('cinema-error')), findsNothing);
   });
