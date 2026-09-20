@@ -31,7 +31,7 @@ import 'features/system_diagnostics/system_diagnostics_screen.dart';
 import 'features/tools/providers_controller.dart';
 import 'features/tools/providers_screen.dart';
 Future<void> main() async { WidgetsFlutterBinding.ensureInitialized(); final p=await SharedPreferences.getInstance(); final store=PersistentLibraryStore(p); await store.initialize(); runApp(TheOnlyApp(store:store)); }
-class TheOnlyApp extends StatelessWidget { const TheOnlyApp({super.key,required this.store}); final PersistentLibraryStore store; @override Widget build(BuildContext context)=>MaterialApp(debugShowCheckedModeBanner:false,title:'The Only',theme:ThemeData.dark(useMaterial3:true),locale:const Locale('ar'),supportedLocales:const [Locale('ar'),Locale('en')],home:TheOnlyShell(store:store)); }
+class TheOnlyApp extends StatelessWidget { const TheOnlyApp({super.key,required this.store}); final PersistentLibraryStore store; @override Widget build(BuildContext context)=>MaterialApp(debugShowCheckedModeBanner:false,title:'The Only',theme:ThemeData.dark(useMaterial3:true),locale:const Locale('ar'),supportedLocales:const [Locale('ar'),Locale('en')],home:Directionality(textDirection:TextDirection.rtl,child:TheOnlyShell(store:store))); }
 class TheOnlyShell extends StatefulWidget { const TheOnlyShell({super.key,required this.store}); final PersistentLibraryStore store; @override State<TheOnlyShell> createState()=>_TheOnlyShellState(); }
 class _TheOnlyShellState extends State<TheOnlyShell>{
  late final SectionSettings settings=SectionSettings(preferences:widget.store.preferences); final ProviderRegistry providers=ProviderRegistry([LegalDemoProvider()]); final health=ProviderHealthStore();
