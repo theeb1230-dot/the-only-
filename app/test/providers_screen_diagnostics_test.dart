@@ -26,5 +26,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Health 1.00'), findsOneWidget);
+    expect(find.byKey(const Key('providers-error')), findsNothing);
+
+    controller.recordProbe('legal-demo', success: false, latencyMs: 1);
+    controller.recordProbe('legal-demo', success: false, latencyMs: 1);
+    await tester.tap(find.byKey(const Key('provider-probe-legal-demo')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('providers-error')), findsNothing);
   });
 }
