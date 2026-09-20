@@ -46,6 +46,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller))));
     await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://example.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pumpAndSettle();
     expect(find.byKey(const Key('resolver-error')), findsOneWidget);
+    expect(find.text('فشل التحليل بأمان'), findsOneWidget);
     expect(find.byKey(const Key('resolver-loading')), findsNothing);
     expect(find.byKey(const Key('resolver-result-0')), findsNothing);
   });
@@ -53,6 +54,6 @@ void main() {
     final controller = fixtureController();
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ResolversScreen(controller: controller))));
     await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://unsupported.invalid/page'); await tester.tap(find.byKey(const Key('resolver-run'))); await tester.pump();
-    expect(find.text('غير مدعوم'), findsOneWidget); expect(find.byKey(const Key('resolver-result-0')), findsNothing);
+    expect(find.text('غير مدعوم'), findsOneWidget); expect(find.byKey(const Key('resolver-result-0')), findsNothing); expect(find.byKey(const Key('resolver-loading')), findsNothing); expect(find.byKey(const Key('resolver-error')), findsNothing);
   });
 }
