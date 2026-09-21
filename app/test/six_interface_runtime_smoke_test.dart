@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:the_only/core/data/in_memory_downloads.dart';
+import 'package:the_only/core/data/in_memory_library.dart';
 import 'package:the_only/core/domain/models.dart';
 import 'package:the_only/core/domain/validation.dart';
 import 'package:the_only/core/providers/legal_demo_provider.dart';
+import 'package:the_only/core/providers/legal_live_demo_provider.dart';
 import 'package:the_only/core/providers/provider_health_store.dart';
 import 'package:the_only/core/providers/provider_registry.dart';
 import 'package:the_only/core/resolvers/direct_media_resolver.dart';
 import 'package:the_only/core/resolvers/resolver_coordinator.dart';
 import 'package:the_only/core/resolvers/resolver_registry.dart';
 import 'package:the_only/core/security/url_policy.dart';
+import 'package:the_only/features/cinema/cinema_controller.dart';
+import 'package:the_only/features/cinema/cinema_screen.dart';
+import 'package:the_only/features/live_tv/live_tv_controller.dart';
+import 'package:the_only/features/live_tv/live_tv_screen.dart';
 import 'package:the_only/features/resolvers/resolvers_controller.dart';
 import 'package:the_only/features/resolvers/resolvers_screen.dart';
 import 'package:the_only/features/sources/sources_controller.dart';
@@ -32,6 +38,11 @@ final class _SnapshotProvider implements SystemSnapshotProvider {
       );
 }
 
+ResolverCoordinator legalResolver() => ResolverCoordinator(
+      ResolverRegistry(const [DirectMediaResolver()]),
+      const StreamValidator(UrlPolicy()),
+    );
+
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   expect(finder, findsOneWidget);
   await tester.ensureVisible(finder);
@@ -43,12 +54,68 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('Cinema covers loading results details Watch Download and back', (tester) async {
+    final history = MemoryHistoryRepository();
+    final downloads = MemoryDownloadsRepository();
+    final controller = CinemaController(
+      providers: [LegalDemoProvider()],
+      favorites: MemoryFavoritesRepository(),
+      history: history,
+      downloads: downloads,
+      resolver: legalResolver(),
+    );
+    StreamSource? watched;
+
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CinemaScreen(
+      controller: controller,
+      playerLauncher: (_, __, source) async => watched = source,
+    ))));
+    expect(find.byKey(const Key('cinema-search-field')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Big Buck Bunny');
+    await tester.tap(find.byKey(const Key('cinema-search-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('cinema-loading')), findsNothing);
+    expect(find.byKey(const Key('cinema-error')), findsNothing);
+    expect(find.byKey(const Key('cinema-item-big-buck-bunny')), findsOneWidget);
+
+    await tapVisible(tester, find.byKey(const Key('cinema-item-big-buck-bunny')));
+    expect(find.byKey(const Key('cinema-details-big-buck-bunny')), findsOneWidget);
+    expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
+    expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
+    await tapVisible(tester, find.byKey(const Key('cinema-watch-0')));
+    expect(watched?.protocol, StreamProtocol.mp4);
+    expect(await history.all(), hasLength(1));
+    expect(await downloads.all(), isEmpty);
+    await tapVisible(tester, find.byKey(const Key('cinema-download-0')));
+    expect(await downloads.all(), hasLength(1));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('cinema-search-field')), findsOneWidget);
+  });
+
+  testWidgets('Live TV covers loading channel details guide Watch and back', (tester) async {
+    StreamSource? watched;
+    final controller = LiveTvController([LegalLiveDemoProvider()], resolver: legalResolver());
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: LiveTvScreen(
+      controller: controller,
+      playerLauncher: (_, __, source) async => watched = source,
+    ))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('live-loading')), findsNothing);
+    expect(find.byKey(const Key('live-error')), findsNothing);
+    expect(find.byKey(const Key('live-channel-public-bunny')), findsOneWidget);
+    await tapVisible(tester, find.byKey(const Key('live-channel-public-bunny')));
+    expect(find.text('دليل البرامج'), findsOneWidget);
+    await tapVisible(tester, find.byKey(const Key('live-watch-0')));
+    expect(watched?.protocol, StreamProtocol.mp4);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('live-channel-public-bunny')), findsOneWidget);
+  });
+
   testWidgets('Sources uses legal runtime provider and keeps Watch and Download separate', (tester) async {
     final downloads = MemoryDownloadsRepository();
-    final resolver = ResolverCoordinator(
-      ResolverRegistry(const [DirectMediaResolver()]),
-      const StreamValidator(UrlPolicy()),
-    );
+    final resolver = legalResolver();
     final controller = SourcesController(
       ProviderRegistry([LegalDemoProvider()]),
       resolver: resolver,
