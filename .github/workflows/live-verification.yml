@@ -8,6 +8,9 @@ on:
       - '.github/workflows/live-verification.yml'
       - 'app/lib/core/providers/legal_demo_provider.dart'
       - 'app/lib/core/providers/legal_live_demo_provider.dart'
+      - 'app/lib/core/providers/internet_archive_provider.dart'
+      - 'app/lib/core/providers/provider.dart'
+      - 'app/lib/main.dart'
 
 permissions:
   contents: read
@@ -18,5 +21,5 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Verify approved public sample media over HTTPS
+      - name: Verify approved legal provider paths and bounded HTTPS redirects
         run: bash tools/live_verify.sh
