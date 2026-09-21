@@ -21,5 +21,5 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Verify approved legal provider paths over HTTPS
+      - name: Verify approved legal provider paths and bounded HTTPS redirects
         run: bash tools/live_verify.sh
