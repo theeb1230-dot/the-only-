@@ -9,23 +9,37 @@ import 'package:the_only/features/tools/providers_controller.dart';
 import 'package:the_only/features/tools/providers_screen.dart';
 
 class FailingProvider implements MediaProvider {
-  @override String get id => 'failing';
-  @override Future<List<MediaItem>> search(String query) async => throw StateError('offline');
-  @override Future<ProviderResult> sourcesFor(MediaItem item) async => throw StateError('offline');
+  @override
+  String get id => 'failing';
+  @override
+  Future<List<MediaItem>> search(String query) async =>
+      throw StateError('offline');
+  @override
+  Future<ProviderResult> sourcesFor(MediaItem item) async =>
+      throw StateError('offline');
 }
 
 void main() {
-  testWidgets('current provider probe failure is surfaced after historical success', (tester) async {
+  testWidgets('current provider probe failure is surfaced after historical success',
+      (tester) async {
     final health = ProviderHealthStore();
-    final controller = ProvidersController(ProviderRegistry([FailingProvider()]), health, const []);
+    final controller = ProvidersController(
+      ProviderRegistry([FailingProvider()]),
+      health,
+      const [],
+    );
     controller.recordProbe('failing', success: true, latencyMs: 1);
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: ProvidersScreen(controller: controller))));
+    await tester.pumpWidget(
+      MaterialApp(home: Scaffold(body: ProvidersScreen(controller: controller))),
+    );
     await tester.tap(find.byKey(const Key('provider-probe-failing')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('providers-error')), findsOneWidget);
     expect(find.text('فشل فحص صحة المزود بأمان'), findsOneWidget);
   });
-  testWidgets('Tools / Providers exposes registered provider diagnostics', (tester) async {
+
+  testWidgets('Tools / Providers exposes registered provider diagnostics',
+      (tester) async {
     final controller = ProvidersController(
       ProviderRegistry([LegalDemoProvider()]),
       ProviderHealthStore(),
@@ -38,12 +52,12 @@ void main() {
 
     expect(find.byKey(const Key('providers-list')), findsOneWidget);
     expect(find.byKey(const Key('provider-legal-demo')), findsOneWidget);
-    expect(find.textContaining('الصحة 0.00'), findsOneWidget);
+    expect(find.textContaining('الدرجة 0.00'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('provider-probe-legal-demo')));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('الصحة 1.00'), findsOneWidget);
+    expect(find.textContaining('الدرجة 1.00'), findsOneWidget);
     expect(find.byKey(const Key('providers-error')), findsNothing);
 
     controller.recordProbe('legal-demo', success: false, latencyMs: 1);

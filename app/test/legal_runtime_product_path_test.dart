@@ -16,12 +16,14 @@ import 'package:the_only/features/live_tv/live_tv_controller.dart';
 import 'package:the_only/features/live_tv/live_tv_screen.dart';
 
 ResolverCoordinator legalResolver() => ResolverCoordinator(
-  ResolverRegistry(const [DirectMediaResolver()]),
-  const StreamValidator(UrlPolicy()),
-);
+      ResolverRegistry(const [DirectMediaResolver()]),
+      const StreamValidator(UrlPolicy()),
+    );
 
 void main() {
-  testWidgets('legal Cinema runtime provider reaches resolved player launch and keeps Download separate', (tester) async {
+  testWidgets(
+      'legal Cinema runtime provider reaches resolved player launch and keeps Download separate',
+      (tester) async {
     final favorites = MemoryFavoritesRepository();
     final history = MemoryHistoryRepository();
     final downloads = MemoryDownloadsRepository();
@@ -34,50 +36,89 @@ void main() {
     );
     StreamSource? launched;
 
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CinemaScreen(
-      controller: controller,
-      playerLauncher: (_, __, source) async { launched = source; },
-    ))));
-    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Flower');
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: CinemaScreen(
+          controller: controller,
+          playerLauncher: (_, __, source) async {
+            launched = source;
+          },
+        ),
+      ),
+    ));
+    await tester.enterText(
+      find.byKey(const Key('cinema-search-field')),
+      'Big Buck Bunny',
+    );
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
-    expect(find.text('MDN Flower Sample'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('cinema-item-mdn-flower')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('cinema-details-mdn-flower')), findsOneWidget);
-    expect(find.text('فيلم'), findsOneWidget);
-    expect(find.text('مصادر التشغيل المتاحة: 1'), findsOneWidget);
-    expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
-    expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
+    expect(
+      find.byKey(const Key('cinema-item-big-buck-bunny')),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.byKey(const Key('cinema-watch-0')));
+    final item = find.byKey(const Key('cinema-item-big-buck-bunny'));
+    await tester.ensureVisible(item);
+    await tester.tap(item);
     await tester.pumpAndSettle();
-    expect(launched?.uri.host, 'mdn.github.io');
+    expect(
+      find.byKey(const Key('cinema-details-big-buck-bunny')),
+      findsOneWidget,
+    );
+    expect(find.text('مصادر التشغيل المتاحة: 1'), findsOneWidget);
+
+    final watch = find.byKey(const Key('cinema-watch-0'));
+    final download = find.byKey(const Key('cinema-download-0'));
+    expect(watch, findsOneWidget);
+    expect(download, findsOneWidget);
+
+    final watchButton = tester.widget<FilledButton>(watch);
+    expect(watchButton.onPressed, isNotNull);
+    watchButton.onPressed!.call();
+    await tester.pumpAndSettle();
+    expect(launched?.uri.host, 'commondatastorage.googleapis.com');
     expect(launched?.protocol, StreamProtocol.mp4);
     expect(await history.all(), hasLength(1));
     expect(await downloads.all(), isEmpty);
 
-    await tester.tap(find.byKey(const Key('cinema-download-0')));
+    final downloadButton = tester.widget<OutlinedButton>(download);
+    expect(downloadButton.onPressed, isNotNull);
+    downloadButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(await downloads.all(), hasLength(1));
   });
 
-  testWidgets('legal Live TV runtime provider reaches channel guide stream resolver and player launch', (tester) async {
+  testWidgets(
+      'legal Live TV runtime provider reaches channel guide stream resolver and player launch',
+      (tester) async {
     StreamSource? launched;
-    final controller = LiveTvController([LegalLiveDemoProvider()], resolver: legalResolver());
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: LiveTvScreen(
-      controller: controller,
-      playerLauncher: (_, __, source) async { launched = source; },
-    ))));
+    final controller =
+        LiveTvController([LegalLiveDemoProvider()], resolver: legalResolver());
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LiveTvScreen(
+          controller: controller,
+          playerLauncher: (_, __, source) async {
+            launched = source;
+          },
+        ),
+      ),
+    ));
     await tester.pumpAndSettle();
-    expect(find.text('The Only Sample Channel'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('live-channel-sample-live')));
+    expect(find.text('Big Buck Bunny'), findsOneWidget);
+
+    final channel = find.byKey(const Key('live-channel-public-bunny'));
+    await tester.ensureVisible(channel);
+    await tester.tap(channel);
     await tester.pumpAndSettle();
-    expect(find.text('Public sample playback'), findsOneWidget);
-    expect(find.byKey(const Key('live-watch-0')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('live-watch-0')));
+    expect(find.text('دليل البرامج'), findsOneWidget);
+
+    final watch = find.byKey(const Key('live-watch-0'));
+    expect(watch, findsOneWidget);
+    await tester.ensureVisible(watch);
+    await tester.tap(watch);
     await tester.pumpAndSettle();
-    expect(launched?.uri.host, 'mdn.github.io');
+    expect(launched?.uri.host, 'commondatastorage.googleapis.com');
     expect(launched?.protocol, StreamProtocol.mp4);
   });
 }

@@ -34,6 +34,12 @@ class _SourcesScreenState extends State<SourcesScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _search();
+  }
+
+  @override
   void dispose() {
     _query.dispose();
     super.dispose();
@@ -53,7 +59,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
         _sources = const {};
       });
     } catch (_) {
-      if (mounted) setState(() => _error = 'Search failed');
+      if (mounted) setState(() => _error = 'فشل البحث في المصادر');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -71,7 +77,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
       if (!mounted) return;
       setState(() => _sources = sources);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Unable to load sources');
+      if (mounted) setState(() => _error = 'تعذر تحميل المصادر');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -99,12 +105,12 @@ class _SourcesScreenState extends State<SourcesScreen> {
       final resolved = await widget.controller.resolveForWatch(item, source);
       if (!mounted) return;
       if (resolved == null) {
-        setState(() => _error = 'Selected source could not be resolved safely');
+        setState(() => _error = 'تعذر تحليل المصدر المحدد بأمان');
         return;
       }
       await _launchPlayer(item, resolved);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Watch source resolution failed');
+      if (mounted) setState(() => _error = 'فشل تحليل مصدر المشاهدة');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -115,7 +121,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
       await widget.controller.download(item, source);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Download queued')),
+        const SnackBar(content: Text('تمت إضافة التنزيل إلى قائمة الانتظار')),
       );
     } on StateError catch (error) {
       if (!mounted) return;
@@ -125,78 +131,120 @@ class _SourcesScreenState extends State<SourcesScreen> {
     }
   }
 
+  String _providerLabel(String id) => id == 'legal-demo' ? 'المكتبة العامة' : id;
+
   @override
   Widget build(BuildContext context) => ListView(
         key: const Key('sources-screen'),
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Sources', style: Theme.of(context).textTheme.headlineSmall),
+          Text('المصادر', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: [
-              for (final id in widget.controller.providerIds) Chip(label: Text(id)),
+              for (final id in widget.controller.providerIds)
+                Chip(
+                  avatar: const Icon(Icons.cloud_outlined, size: 18),
+                  label: Text(_providerLabel(id)),
+                ),
             ],
           ),
+          const SizedBox(height: 12),
           TextField(
             key: const Key('sources-search-field'),
             controller: _query,
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _search(),
             decoration: InputDecoration(
-              labelText: 'Search all providers',
+              labelText: 'البحث في جميع المزودات',
+              hintText: 'اتركه فارغًا لعرض المحتوى المتاح',
+              prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 key: const Key('sources-search-button'),
+                tooltip: 'بحث',
                 onPressed: _busy ? null : _search,
-                icon: const Icon(Icons.search),
+                icon: const Icon(Icons.arrow_forward),
               ),
             ),
           ),
+          const SizedBox(height: 12),
           if (_busy) const LinearProgressIndicator(key: Key('sources-loading')),
-          if (_error != null) Semantics(liveRegion: true, child: Text(_error!, key: const Key('sources-error'))),
-          if (_results.isEmpty && !_busy && _error == null && _query.text.trim().isNotEmpty)
-            const Text('No results', key: Key('sources-empty')),
+          if (_error != null)
+            Semantics(
+              liveRegion: true,
+              child: Text(_error!, key: const Key('sources-error')),
+            ),
+          if (_results.isEmpty && !_busy && _error == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 36),
+              child: Center(child: Text('لا توجد نتائج', key: Key('sources-empty'))),
+            ),
           for (final item in _results)
-            ListTile(
-              key: Key('sources-item-${item.id}'),
-              title: Text(item.title),
-              subtitle: Text(item.kind.name),
-              onTap: () => _open(item),
+            Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                key: Key('sources-item-${item.id}'),
+                leading: item.posterUrl == null
+                    ? const CircleAvatar(child: Icon(Icons.movie_outlined))
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(
+                          item.posterUrl!,
+                          width: 58,
+                          height: 58,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox(
+                            width: 58,
+                            height: 58,
+                            child: ColoredBox(
+                              color: Color(0xFF24212B),
+                              child: Icon(Icons.broken_image_outlined),
+                            ),
+                          ),
+                        ),
+                      ),
+                title: Text(item.title),
+                subtitle: Text(item.kind == MediaKind.series ? 'مسلسل' : 'فيلم'),
+                trailing: const Icon(Icons.chevron_left),
+                onTap: () => _open(item),
+              ),
             ),
           if (_selected case final item?) ...[
-            const Divider(),
+            const Divider(height: 30),
             Text(item.title, style: Theme.of(context).textTheme.titleLarge),
-            if (_sources.isEmpty && !_busy && _error == null) const Text('No sources available', key: Key('sources-streams-empty')),
+            const SizedBox(height: 8),
+            if (_sources.isEmpty && !_busy && _error == null)
+              const Text('لا توجد مصادر متاحة', key: Key('sources-streams-empty')),
             for (final entry in _sources.entries) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  entry.key,
+                  _providerLabel(entry.key),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
               for (var i = 0; i < entry.value.length; i++)
                 ListTile(
                   key: Key('sources-stream-${entry.key}-$i'),
-                  title: Text(
-                    entry.value[i].quality ??
-                        entry.value[i].protocol.name.toUpperCase(),
-                  ),
-                  subtitle: Text(entry.value[i].protocol.name),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.play_circle_outline),
+                  title: Text(entry.value[i].quality ?? entry.value[i].protocol.name.toUpperCase()),
+                  subtitle: Text(entry.value[i].protocol.name.toUpperCase()),
                   trailing: Wrap(
                     spacing: 8,
                     children: [
                       FilledButton(
                         key: Key('sources-watch-${entry.key}-$i'),
-                        onPressed: _busy
-                            ? null
-                            : () => _watch(item, entry.value[i]),
-                        child: const Text('Watch'),
+                        onPressed: _busy ? null : () => _watch(item, entry.value[i]),
+                        child: const Text('مشاهدة'),
                       ),
                       if (isDownloadable(entry.value[i]))
                         OutlinedButton(
                           key: Key('sources-download-${entry.key}-$i'),
                           onPressed: () => _download(item, entry.value[i]),
-                          child: const Text('Download'),
+                          child: const Text('تنزيل'),
                         ),
                     ],
                   ),

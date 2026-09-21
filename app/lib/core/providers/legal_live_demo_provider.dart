@@ -3,25 +3,48 @@ import '../domain/models.dart';
 import '../domain/programme.dart';
 import 'live_provider.dart';
 
-/// Legal runtime smoke provider backed by a public MDN sample video.
-/// No scraping, credentials, DRM bypass, or restricted source is involved.
+/// Built-in public channel baseline. It guarantees that the Live interface has
+/// playable entries while external/authorized playlist providers are being
+/// configured or temporarily unavailable.
 final class LegalLiveDemoProvider implements LiveTvProvider {
   @override
   String get id => 'legal-live-demo';
 
-  static const _channel = LiveChannel(
-    id: 'sample-live',
-    name: 'The Only Sample Channel',
-    group: 'Public samples',
-    epgId: 'sample-live',
-  );
+  static const _channels = <LiveChannel>[
+    LiveChannel(
+      id: 'public-bunny',
+      name: 'Big Buck Bunny',
+      group: 'قنوات عامة',
+      epgId: 'public-bunny',
+    ),
+    LiveChannel(
+      id: 'public-elephants',
+      name: 'Elephants Dream',
+      group: 'قنوات عامة',
+      epgId: 'public-elephants',
+    ),
+    LiveChannel(
+      id: 'public-joyrides',
+      name: 'For Bigger Joyrides',
+      group: 'قنوات عامة',
+      epgId: 'public-joyrides',
+    ),
+  ];
 
-  static final Uri _sampleUri = Uri.parse(
-    'https://mdn.github.io/shared-assets/videos/flower.mp4',
-  );
+  static final _streams = <String, Uri>{
+    'public-bunny': Uri.parse(
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    ),
+    'public-elephants': Uri.parse(
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    ),
+    'public-joyrides': Uri.parse(
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    ),
+  };
 
   @override
-  Future<List<LiveChannel>> channels() async => const [_channel];
+  Future<List<LiveChannel>> channels() async => _channels;
 
   @override
   Future<List<Programme>> programmes(
@@ -29,12 +52,28 @@ final class LegalLiveDemoProvider implements LiveTvProvider {
     DateTime from,
     DateTime to,
   ) async {
-    if (channelId != _channel.id || !to.isAfter(from)) return const [];
+    LiveChannel? channel;
+    for (final candidate in _channels) {
+      if (candidate.id == channelId) {
+        channel = candidate;
+        break;
+      }
+    }
+    if (channel == null || !to.isAfter(from)) return const [];
+    final midpoint = from.add(
+      Duration(milliseconds: to.difference(from).inMilliseconds ~/ 2),
+    );
     return [
       Programme(
         channelId: channelId,
-        title: 'Public sample playback',
+        title: '${channel.name} • تشغيل عام',
         startsAt: from,
+        endsAt: midpoint,
+      ),
+      Programme(
+        channelId: channelId,
+        title: 'استمرار البث التجريبي العام',
+        startsAt: midpoint,
         endsAt: to,
       ),
     ];
@@ -42,13 +81,14 @@ final class LegalLiveDemoProvider implements LiveTvProvider {
 
   @override
   Future<List<StreamSource>> streams(LiveChannel channel) async {
-    if (channel.id != _channel.id) return const [];
+    final uri = _streams[channel.id];
+    if (uri == null) return const [];
     return [
       StreamSource(
-        uri: _sampleUri,
+        uri: uri,
         protocol: StreamProtocol.mp4,
         providerId: id,
-        quality: 'sample',
+        quality: '1080p',
       ),
     ];
   }

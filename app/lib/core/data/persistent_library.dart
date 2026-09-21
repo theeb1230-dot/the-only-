@@ -46,9 +46,6 @@ final class PersistentLibraryStore {
     while (current < to) {
       switch (current) {
         case 1:
-          // v2 intentionally keeps the v1 collection payloads unchanged.
-          // The migration establishes an explicit sequential upgrade path so
-          // future schemas never silently reinterpret user-owned state.
           current = 2;
         default:
           if (current < to) {
@@ -70,7 +67,6 @@ final class PersistentLibraryStore {
       final decoded = jsonDecode(raw);
       return decoded is List<Object?> ? decoded : const [];
     } on FormatException {
-      // Corrupt user state must fail closed rather than crash the application.
       return const [];
     }
   }
@@ -103,15 +99,23 @@ final class PersistentFavoritesRepository implements FavoritesRepository {
 
   @override
   Future<void> add(MediaItem item) async {
-    final current = (await all()).where((candidate) => candidate.id != item.id).toList();
+    final current = (await all())
+        .where((candidate) => candidate.id != item.id)
+        .toList();
     current.add(item);
-    await store.writeList(store.favoritesKey, current.map(_mediaToJson).toList());
+    await store.writeList(
+      store.favoritesKey,
+      current.map(_mediaToJson).toList(),
+    );
   }
 
   @override
   Future<void> remove(String mediaId) async {
     final current = (await all()).where((item) => item.id != mediaId).toList();
-    await store.writeList(store.favoritesKey, current.map(_mediaToJson).toList());
+    await store.writeList(
+      store.favoritesKey,
+      current.map(_mediaToJson).toList(),
+    );
   }
 }
 
@@ -132,9 +136,14 @@ final class PersistentHistoryRepository implements HistoryRepository {
 
   @override
   Future<void> save(HistoryEntry entry) async {
-    final current = (await all()).where((candidate) => candidate.item.id != entry.item.id).toList();
+    final current = (await all())
+        .where((candidate) => candidate.item.id != entry.item.id)
+        .toList();
     current.insert(0, entry);
-    await store.writeList(store.historyKey, current.map(_historyToJson).toList());
+    await store.writeList(
+      store.historyKey,
+      current.map(_historyToJson).toList(),
+    );
   }
 }
 
@@ -151,9 +160,14 @@ final class PersistentDownloadsRepository implements DownloadsRepository {
 
   @override
   Future<void> enqueue(DownloadJob job) async {
-    final current = (await all()).where((candidate) => candidate.id != job.id).toList();
+    final current = (await all())
+        .where((candidate) => candidate.id != job.id)
+        .toList();
     current.add(job);
-    await store.writeList(store.downloadsKey, current.map(_downloadToJson).toList());
+    await store.writeList(
+      store.downloadsKey,
+      current.map(_downloadToJson).toList(),
+    );
   }
 
   @override
@@ -162,7 +176,10 @@ final class PersistentDownloadsRepository implements DownloadsRepository {
   @override
   Future<void> remove(String id) async {
     final current = (await all()).where((job) => job.id != id).toList();
-    await store.writeList(store.downloadsKey, current.map(_downloadToJson).toList());
+    await store.writeList(
+      store.downloadsKey,
+      current.map(_downloadToJson).toList(),
+    );
   }
 }
 
@@ -170,6 +187,11 @@ Map<String, Object?> _mediaToJson(MediaItem item) => {
       'id': item.id,
       'title': item.title,
       'kind': item.kind.name,
+      if (item.posterUrl != null) 'posterUrl': item.posterUrl,
+      if (item.backdropUrl != null) 'backdropUrl': item.backdropUrl,
+      if (item.overview != null) 'overview': item.overview,
+      if (item.year != null) 'year': item.year,
+      if (item.rating != null) 'rating': item.rating,
     };
 
 MediaItem? _mediaFromJson(Object? value) {
@@ -178,8 +200,24 @@ MediaItem? _mediaFromJson(Object? value) {
   final title = value['title'];
   final kind = value['kind'];
   if (id is! String || title is! String || kind is! String) return null;
+
+  final posterUrl = value['posterUrl'];
+  final backdropUrl = value['backdropUrl'];
+  final overview = value['overview'];
+  final year = value['year'];
+  final rating = value['rating'];
+
   try {
-    return MediaItem(id: id, title: title, kind: MediaKind.values.byName(kind));
+    return MediaItem(
+      id: id,
+      title: title,
+      kind: MediaKind.values.byName(kind),
+      posterUrl: posterUrl is String ? posterUrl : null,
+      backdropUrl: backdropUrl is String ? backdropUrl : null,
+      overview: overview is String ? overview : null,
+      year: year is int ? year : null,
+      rating: rating is num ? rating.toDouble() : null,
+    );
   } on ArgumentError {
     return null;
   }
@@ -196,10 +234,19 @@ HistoryEntry? _historyFromJson(Object? value) {
   final item = _mediaFromJson(value['item']);
   final positionMs = value['positionMs'];
   final updatedAt = value['updatedAt'];
-  if (item == null || positionMs is! int || updatedAt is! String || positionMs < 0) return null;
+  if (item == null ||
+      positionMs is! int ||
+      updatedAt is! String ||
+      positionMs < 0) {
+    return null;
+  }
   final parsed = DateTime.tryParse(updatedAt);
   if (parsed == null) return null;
-  return HistoryEntry(item: item, position: Duration(milliseconds: positionMs), updatedAt: parsed.toUtc());
+  return HistoryEntry(
+    item: item,
+    position: Duration(milliseconds: positionMs),
+    updatedAt: parsed.toUtc(),
+  );
 }
 
 Map<String, Object?> _sourceToJson(StreamSource source) => {
@@ -215,7 +262,11 @@ StreamSource? _sourceFromJson(Object? value) {
   final protocolValue = value['protocol'];
   final providerId = value['providerId'];
   final quality = value['quality'];
-  if (uriValue is! String || protocolValue is! String || providerId is! String) return null;
+  if (uriValue is! String ||
+      protocolValue is! String ||
+      providerId is! String) {
+    return null;
+  }
   final uri = Uri.tryParse(uriValue);
   if (uri == null || !uri.hasScheme || !uri.hasAuthority) return null;
   try {
@@ -253,7 +304,9 @@ DownloadJob? _downloadFromJson(Object? value) {
       id: id,
       source: source,
       state: DownloadState.values.byName(state),
-      progress: progress is num ? progress.toDouble().clamp(0, 1).toDouble() : 0,
+      progress: progress is num
+          ? progress.toDouble().clamp(0, 1).toDouble()
+          : 0,
       localPath: localPath is String ? localPath : null,
       error: error is String ? error : null,
     );
