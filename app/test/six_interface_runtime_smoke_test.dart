@@ -7,6 +7,7 @@ import 'package:the_only/core/domain/models.dart';
 import 'package:the_only/core/domain/validation.dart';
 import 'package:the_only/core/providers/legal_demo_provider.dart';
 import 'package:the_only/core/providers/legal_live_demo_provider.dart';
+import 'package:the_only/core/providers/provider.dart';
 import 'package:the_only/core/providers/provider_health_store.dart';
 import 'package:the_only/core/providers/provider_registry.dart';
 import 'package:the_only/core/resolvers/direct_media_resolver.dart';
@@ -38,6 +39,40 @@ final class _SnapshotProvider implements SystemSnapshotProvider {
       );
 }
 
+/// Deterministic legal media provider for widget smoke coverage. Keeping poster
+/// URLs null avoids image-network work leaking into the widget test event loop;
+/// production provider networking is verified separately by LIVE verification.
+final class _SmokeMediaProvider implements MediaProvider {
+  @override
+  String get id => 'smoke-legal';
+
+  static const item = MediaItem(
+    id: 'big-buck-bunny',
+    title: 'Big Buck Bunny',
+    kind: MediaKind.movie,
+    overview: 'Deterministic public-media smoke fixture.',
+  );
+
+  @override
+  Future<List<MediaItem>> search(String query) async {
+    final q = query.trim().toLowerCase();
+    return q.isEmpty || item.title.toLowerCase().contains(q) ? const [item] : const [];
+  }
+
+  @override
+  Future<ProviderResult> sourcesFor(MediaItem media) async => ProviderResult(
+        providerId: id,
+        sources: [
+          StreamSource(
+            uri: Uri.parse('https://mdn.github.io/shared-assets/videos/flower.mp4'),
+            protocol: StreamProtocol.mp4,
+            providerId: id,
+            quality: 'smoke',
+          ),
+        ],
+      );
+}
+
 ResolverCoordinator legalResolver() => ResolverCoordinator(
       ResolverRegistry(const [DirectMediaResolver()]),
       const StreamValidator(UrlPolicy()),
@@ -58,7 +93,7 @@ void main() {
     final history = MemoryHistoryRepository();
     final downloads = MemoryDownloadsRepository();
     final controller = CinemaController(
-      providers: [LegalDemoProvider()],
+      providers: [_SmokeMediaProvider()],
       favorites: MemoryFavoritesRepository(),
       history: history,
       downloads: downloads,
