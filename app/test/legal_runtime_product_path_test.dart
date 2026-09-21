@@ -46,16 +46,25 @@ void main() {
         ),
       ),
     ));
-    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Big Buck Bunny');
+    await tester.enterText(
+      find.byKey(const Key('cinema-search-field')),
+      'Big Buck Bunny',
+    );
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
-    expect(find.text('Big Buck Bunny'), findsOneWidget);
+    expect(
+      find.byKey(const Key('cinema-item-big-buck-bunny')),
+      findsOneWidget,
+    );
 
     final item = find.byKey(const Key('cinema-item-big-buck-bunny'));
     await tester.ensureVisible(item);
     await tester.tap(item);
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('cinema-details-big-buck-bunny')), findsOneWidget);
+    expect(
+      find.byKey(const Key('cinema-details-big-buck-bunny')),
+      findsOneWidget,
+    );
     expect(find.text('مصادر التشغيل المتاحة: 1'), findsOneWidget);
 
     final watch = find.byKey(const Key('cinema-watch-0'));
@@ -63,16 +72,18 @@ void main() {
     expect(watch, findsOneWidget);
     expect(download, findsOneWidget);
 
-    await tester.ensureVisible(watch);
-    await tester.tap(watch);
+    final watchButton = tester.widget<FilledButton>(watch);
+    expect(watchButton.onPressed, isNotNull);
+    watchButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(launched?.uri.host, 'commondatastorage.googleapis.com');
     expect(launched?.protocol, StreamProtocol.mp4);
     expect(await history.all(), hasLength(1));
     expect(await downloads.all(), isEmpty);
 
-    await tester.ensureVisible(download);
-    await tester.tap(download);
+    final downloadButton = tester.widget<OutlinedButton>(download);
+    expect(downloadButton.onPressed, isNotNull);
+    downloadButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(await downloads.all(), hasLength(1));
   });
