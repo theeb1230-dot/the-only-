@@ -15,13 +15,24 @@ PlaybackSurface playbackSurfaceFor(StreamSource source) =>
 /// embed sources can only enter the in-app WebView when their host is present
 /// in an explicit product allowlist. An empty allowlist therefore fails closed.
 class PlaybackScreen extends StatelessWidget {
-  const PlaybackScreen({super.key,required this.source,required this.title,this.allowedEmbedHosts=const<String>{}});
+  const PlaybackScreen({
+    super.key,
+    required this.source,
+    required this.title,
+    this.allowedEmbedHosts = const <String>{},
+  });
+
   final StreamSource source;
   final String title;
   final Set<String> allowedEmbedHosts;
 
-  @override Widget build(BuildContext context)=>switch(playbackSurfaceFor(source)){
-    PlaybackSurface.legalEmbed=>EmbedScreen(initialUri:source.uri,title:title,allowedHosts:allowedEmbedHosts),
-    PlaybackSurface.native=>PlayerScreen(source:source,title:title),
-  };
+  @override
+  Widget build(BuildContext context) => switch (playbackSurfaceFor(source)) {
+        PlaybackSurface.legalEmbed => LegalEmbedScreen(
+            initialUri: source.uri,
+            title: title,
+            allowedHosts: allowedEmbedHosts,
+          ),
+        PlaybackSurface.native => PlayerScreen(source: source, title: title),
+      };
 }
