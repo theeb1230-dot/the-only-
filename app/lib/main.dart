@@ -9,6 +9,7 @@ import 'core/data/persistent_library.dart';
 import 'core/domain/download_policy.dart';
 import 'core/domain/validation.dart';
 import 'core/player/playback_screen.dart';
+import 'core/providers/internet_archive_provider.dart';
 import 'core/providers/legal_demo_provider.dart';
 import 'core/providers/legal_live_demo_provider.dart';
 import 'core/providers/product_provider_selector.dart';
@@ -75,7 +76,10 @@ class TheOnlyShell extends StatefulWidget {
 class _TheOnlyShellState extends State<TheOnlyShell> {
   late final SectionSettings settings =
       SectionSettings(preferences: widget.store.preferences);
-  final ProviderRegistry providers = ProviderRegistry([LegalDemoProvider()]);
+  final ProviderRegistry providers = ProviderRegistry([
+    InternetArchiveProvider(),
+    LegalDemoProvider(),
+  ]);
   final health = ProviderHealthStore();
   late final providerSelector = ProductProviderSelector(
     health: health,
