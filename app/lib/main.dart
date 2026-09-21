@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/a11y/shell_labels.dart';
+import 'core/a11y/tv_focus_scope.dart';
 import 'core/data/download_transfer.dart';
 import 'core/data/downloads.dart';
 import 'core/data/persistent_library.dart';
@@ -59,7 +60,7 @@ class TheOnlyApp extends StatelessWidget {
         home: Directionality(
           key: const Key('app-shell-rtl'),
           textDirection: TextDirection.rtl,
-          child: TheOnlyShell(store: store),
+          child: TvFocusScope(child: TheOnlyShell(store: store)),
         ),
       );
 }
@@ -281,6 +282,7 @@ class _TheOnlyShellState extends State<TheOnlyShell> {
                                           : FontWeight.normal,
                                     ),
                                   ),
+                                  const SizedBox(height: 3),
                                 ],
                               ),
                             ),
