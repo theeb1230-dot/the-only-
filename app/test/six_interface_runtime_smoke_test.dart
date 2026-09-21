@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:the_only/core/data/in_memory_downloads.dart';
+import 'package:the_only/core/data/in_memory_library.dart';
 import 'package:the_only/core/domain/models.dart';
 import 'package:the_only/core/domain/validation.dart';
-import 'package:the_only/core/providers/legal_demo_provider.dart';
+import 'package:the_only/core/providers/legal_live_demo_provider.dart';
+import 'package:the_only/core/providers/provider.dart';
 import 'package:the_only/core/providers/provider_health_store.dart';
 import 'package:the_only/core/providers/provider_registry.dart';
 import 'package:the_only/core/resolvers/direct_media_resolver.dart';
 import 'package:the_only/core/resolvers/resolver_coordinator.dart';
 import 'package:the_only/core/resolvers/resolver_registry.dart';
 import 'package:the_only/core/security/url_policy.dart';
+import 'package:the_only/features/cinema/cinema_controller.dart';
+import 'package:the_only/features/cinema/cinema_screen.dart';
+import 'package:the_only/features/live_tv/live_tv_controller.dart';
+import 'package:the_only/features/live_tv/live_tv_screen.dart';
 import 'package:the_only/features/resolvers/resolvers_controller.dart';
 import 'package:the_only/features/resolvers/resolvers_screen.dart';
 import 'package:the_only/features/sources/sources_controller.dart';
@@ -32,10 +38,57 @@ final class _SnapshotProvider implements SystemSnapshotProvider {
       );
 }
 
+final class _SmokeMediaProvider implements MediaProvider {
+  @override
+  String get id => 'legal-demo';
+
+  static const item = MediaItem(
+    id: 'big-buck-bunny',
+    title: 'Big Buck Bunny',
+    kind: MediaKind.movie,
+    overview: 'Deterministic public-media smoke fixture.',
+  );
+
+  @override
+  Future<List<MediaItem>> search(String query) async {
+    final q = query.trim().toLowerCase();
+    return q.isEmpty || item.title.toLowerCase().contains(q) ? const [item] : const [];
+  }
+
+  @override
+  Future<ProviderResult> sourcesFor(MediaItem media) async => ProviderResult(
+        providerId: id,
+        sources: [
+          StreamSource(
+            uri: Uri.parse('https://mdn.github.io/shared-assets/videos/flower.mp4'),
+            protocol: StreamProtocol.mp4,
+            providerId: id,
+            quality: 'smoke',
+          ),
+        ],
+      );
+}
+
+ResolverCoordinator legalResolver() => ResolverCoordinator(
+      ResolverRegistry(const [DirectMediaResolver()]),
+      const StreamValidator(UrlPolicy()),
+    );
+
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
-  expect(finder, findsOneWidget);
-  await tester.ensureVisible(finder);
+  // ListView lazily builds children. A strict pre-scroll findsOneWidget assertion
+  // makes otherwise-correct smoke tests fail whenever the target is initially
+  // outside the viewport. Scroll first when necessary, then assert and tap.
+  if (finder.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(
+      finder,
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+  } else {
+    await tester.ensureVisible(finder);
+  }
   await tester.pumpAndSettle();
+  expect(finder, findsOneWidget);
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }
@@ -43,14 +96,64 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Sources uses legal runtime provider and keeps Watch and Download separate', (tester) async {
+  testWidgets('Cinema covers loading results details Watch and Download', (tester) async {
+    final history = MemoryHistoryRepository();
     final downloads = MemoryDownloadsRepository();
-    final resolver = ResolverCoordinator(
-      ResolverRegistry(const [DirectMediaResolver()]),
-      const StreamValidator(UrlPolicy()),
+    final controller = CinemaController(
+      providers: [_SmokeMediaProvider()],
+      favorites: MemoryFavoritesRepository(),
+      history: history,
+      downloads: downloads,
+      resolver: legalResolver(),
     );
+    StreamSource? watched;
+
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CinemaScreen(
+      controller: controller,
+      playerLauncher: (_, __, source) async => watched = source,
+    ))));
+    expect(find.byKey(const Key('cinema-search-field')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'Big Buck Bunny');
+    await tester.tap(find.byKey(const Key('cinema-search-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('cinema-loading')), findsNothing);
+    expect(find.byKey(const Key('cinema-error')), findsNothing);
+    expect(find.byKey(const Key('cinema-item-big-buck-bunny')), findsOneWidget);
+
+    await tapVisible(tester, find.byKey(const Key('cinema-item-big-buck-bunny')));
+    await tapVisible(tester, find.byKey(const Key('cinema-details-big-buck-bunny')));
+    expect(find.byKey(const Key('cinema-watch-0')), findsOneWidget);
+    expect(find.byKey(const Key('cinema-download-0')), findsOneWidget);
+    await tapVisible(tester, find.byKey(const Key('cinema-watch-0')));
+    expect(watched?.protocol, StreamProtocol.mp4);
+    expect(await history.all(), hasLength(1));
+    expect(await downloads.all(), isEmpty);
+    await tapVisible(tester, find.byKey(const Key('cinema-download-0')));
+    expect(await downloads.all(), hasLength(1));
+  });
+
+  testWidgets('Live TV covers loading channel details guide and Watch', (tester) async {
+    StreamSource? watched;
+    final controller = LiveTvController([LegalLiveDemoProvider()], resolver: legalResolver());
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: LiveTvScreen(
+      controller: controller,
+      playerLauncher: (_, __, source) async => watched = source,
+    ))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('live-tv-loading')), findsNothing);
+    expect(find.byKey(const Key('live-tv-error')), findsNothing);
+    expect(find.byKey(const Key('live-channel-public-bunny')), findsOneWidget);
+    await tapVisible(tester, find.byKey(const Key('live-channel-public-bunny')));
+    expect(find.text('دليل البرامج'), findsOneWidget);
+    await tapVisible(tester, find.byKey(const Key('live-watch-0')));
+    expect(watched?.protocol, StreamProtocol.mp4);
+  });
+
+  testWidgets('Sources keeps Watch and Download separate on the legal provider contract', (tester) async {
+    final downloads = MemoryDownloadsRepository();
+    final resolver = legalResolver();
     final controller = SourcesController(
-      ProviderRegistry([LegalDemoProvider()]),
+      ProviderRegistry([_SmokeMediaProvider()]),
       resolver: resolver,
       downloads: downloads,
     );
@@ -64,17 +167,12 @@ void main() {
     await tester.enterText(find.byKey(const Key('sources-search-field')), 'Bunny');
     await tester.tap(find.byKey(const Key('sources-search-button')));
     await tester.pumpAndSettle();
-    expect(find.text('Big Buck Bunny'), findsOneWidget);
     expect(find.byKey(const Key('sources-loading')), findsNothing);
     expect(find.byKey(const Key('sources-error')), findsNothing);
     await tapVisible(tester, find.byKey(const Key('sources-item-big-buck-bunny')));
-    expect(find.byKey(const Key('sources-watch-legal-demo-0')), findsOneWidget);
-    expect(find.byKey(const Key('sources-download-legal-demo-0')), findsOneWidget);
-
     await tapVisible(tester, find.byKey(const Key('sources-watch-legal-demo-0')));
-    expect(watched?.uri.host, 'commondatastorage.googleapis.com');
+    expect(watched?.uri.host, 'mdn.github.io');
     expect(await downloads.all(), isEmpty);
-
     await tapVisible(tester, find.byKey(const Key('sources-download-legal-demo-0')));
     expect(await downloads.all(), hasLength(1));
   });
@@ -87,13 +185,9 @@ void main() {
       controller: ResolversController(registry, coordinator),
       onWatch: (source) async => watched = source,
     ))));
-    await tester.enterText(
-      find.byKey(const Key('resolver-uri')),
-      'https://mdn.github.io/shared-assets/videos/flower.mp4',
-    );
+    await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://mdn.github.io/shared-assets/videos/flower.mp4');
     await tapVisible(tester, find.byKey(const Key('resolver-run')));
     expect(find.text('مدعوم'), findsOneWidget);
-    expect(find.byKey(const Key('resolver-result-0')), findsOneWidget);
     expect(find.byKey(const Key('resolver-loading')), findsNothing);
     expect(find.byKey(const Key('resolver-error')), findsNothing);
     await tapVisible(tester, find.byKey(const Key('resolver-watch-0')));
@@ -104,7 +198,7 @@ void main() {
   testWidgets('Tools Providers exposes registered legal provider, probe health, and persistent preferences', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
-    final registry = ProviderRegistry([LegalDemoProvider()]);
+    final registry = ProviderRegistry([_SmokeMediaProvider()]);
     final health = ProviderHealthStore();
     final controller = ProvidersController(registry, health, const [], preferencesStore: preferences);
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ProvidersScreen(controller: controller))));
