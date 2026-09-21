@@ -5,7 +5,6 @@ import 'package:the_only/core/data/in_memory_downloads.dart';
 import 'package:the_only/core/data/in_memory_library.dart';
 import 'package:the_only/core/domain/models.dart';
 import 'package:the_only/core/domain/validation.dart';
-import 'package:the_only/core/providers/legal_demo_provider.dart';
 import 'package:the_only/core/providers/legal_live_demo_provider.dart';
 import 'package:the_only/core/providers/provider.dart';
 import 'package:the_only/core/providers/provider_health_store.dart';
@@ -44,7 +43,7 @@ final class _SnapshotProvider implements SystemSnapshotProvider {
 /// production provider networking is verified separately by LIVE verification.
 final class _SmokeMediaProvider implements MediaProvider {
   @override
-  String get id => 'smoke-legal';
+  String get id => 'legal-demo';
 
   static const item = MediaItem(
     id: 'big-buck-bunny',
@@ -144,11 +143,11 @@ void main() {
     expect(find.byKey(const Key('live-channel-public-bunny')), findsOneWidget);
   });
 
-  testWidgets('Sources uses legal runtime provider and keeps Watch and Download separate', (tester) async {
+  testWidgets('Sources keeps Watch and Download separate on the legal provider contract', (tester) async {
     final downloads = MemoryDownloadsRepository();
     final resolver = legalResolver();
     final controller = SourcesController(
-      ProviderRegistry([LegalDemoProvider()]),
+      ProviderRegistry([_SmokeMediaProvider()]),
       resolver: resolver,
       downloads: downloads,
     );
@@ -170,7 +169,7 @@ void main() {
     expect(find.byKey(const Key('sources-download-legal-demo-0')), findsOneWidget);
 
     await tapVisible(tester, find.byKey(const Key('sources-watch-legal-demo-0')));
-    expect(watched?.uri.host, 'commondatastorage.googleapis.com');
+    expect(watched?.uri.host, 'mdn.github.io');
     expect(await downloads.all(), isEmpty);
 
     await tapVisible(tester, find.byKey(const Key('sources-download-legal-demo-0')));
@@ -185,10 +184,7 @@ void main() {
       controller: ResolversController(registry, coordinator),
       onWatch: (source) async => watched = source,
     ))));
-    await tester.enterText(
-      find.byKey(const Key('resolver-uri')),
-      'https://mdn.github.io/shared-assets/videos/flower.mp4',
-    );
+    await tester.enterText(find.byKey(const Key('resolver-uri')), 'https://mdn.github.io/shared-assets/videos/flower.mp4');
     await tapVisible(tester, find.byKey(const Key('resolver-run')));
     expect(find.text('مدعوم'), findsOneWidget);
     expect(find.byKey(const Key('resolver-result-0')), findsOneWidget);
@@ -202,7 +198,7 @@ void main() {
   testWidgets('Tools Providers exposes registered legal provider, probe health, and persistent preferences', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
-    final registry = ProviderRegistry([LegalDemoProvider()]);
+    final registry = ProviderRegistry([_SmokeMediaProvider()]);
     final health = ProviderHealthStore();
     final controller = ProvidersController(registry, health, const [], preferencesStore: preferences);
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: ProvidersScreen(controller: controller))));
