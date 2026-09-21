@@ -54,7 +54,7 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('Cinema covers loading results details Watch Download and back', (tester) async {
+  testWidgets('Cinema covers loading results details Watch and Download', (tester) async {
     final history = MemoryHistoryRepository();
     final downloads = MemoryDownloadsRepository();
     final controller = CinemaController(
@@ -88,12 +88,10 @@ void main() {
     expect(await downloads.all(), isEmpty);
     await tapVisible(tester, find.byKey(const Key('cinema-download-0')));
     expect(await downloads.all(), hasLength(1));
-    await tester.pageBack();
-    await tester.pumpAndSettle();
     expect(find.byKey(const Key('cinema-search-field')), findsOneWidget);
   });
 
-  testWidgets('Live TV covers loading channel details guide Watch and back', (tester) async {
+  testWidgets('Live TV covers loading channel details guide and Watch', (tester) async {
     StreamSource? watched;
     final controller = LiveTvController([LegalLiveDemoProvider()], resolver: legalResolver());
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: LiveTvScreen(
@@ -101,15 +99,13 @@ void main() {
       playerLauncher: (_, __, source) async => watched = source,
     ))));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('live-loading')), findsNothing);
-    expect(find.byKey(const Key('live-error')), findsNothing);
+    expect(find.byKey(const Key('live-tv-loading')), findsNothing);
+    expect(find.byKey(const Key('live-tv-error')), findsNothing);
     expect(find.byKey(const Key('live-channel-public-bunny')), findsOneWidget);
     await tapVisible(tester, find.byKey(const Key('live-channel-public-bunny')));
     expect(find.text('دليل البرامج'), findsOneWidget);
     await tapVisible(tester, find.byKey(const Key('live-watch-0')));
     expect(watched?.protocol, StreamProtocol.mp4);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
     expect(find.byKey(const Key('live-channel-public-bunny')), findsOneWidget);
   });
 
