@@ -9,14 +9,24 @@ set -euo pipefail
 failures=0
 passes=0
 
+host_allowed() {
+  local host="$1"
+  local allowed_host="$2"
+  local allow_subdomains="${3:-false}"
+  [[ "$host" == "$allowed_host" ]] && return 0
+  [[ "$allow_subdomains" == "true" && "$host" == *".$allowed_host" ]] && return 0
+  return 1
+}
+
 verify_media_url() {
   local url="$1"
   local allowed_host="$2"
   local label="$3"
+  local allow_subdomains="${4:-false}"
   local host headers body result code final_url final_host bytes content_type reason
 
   host="$(python3 -c 'import sys,urllib.parse; print(urllib.parse.urlsplit(sys.argv[1]).hostname or "")' "$url")"
-  if [[ "$host" != "$allowed_host" ]]; then
+  if ! host_allowed "$host" "$allowed_host" "$allow_subdomains"; then
     echo "LIVE_FAIL label=$label reason=unapproved_host host=${host:-missing}" >&2
     failures=$((failures + 1))
     return
@@ -53,7 +63,7 @@ verify_media_url() {
   esac
   if [[ -z "$reason" && "$bytes" -le 0 ]]; then reason="empty_body"; fi
   if [[ -z "$reason" && ( -z "$content_type" || "$content_type" != video/* ) ]]; then reason="unexpected_content_type"; fi
-  if [[ -z "$reason" && "$final_host" != "$allowed_host" ]]; then reason="redirect_escaped_allowlist"; fi
+  if [[ -z "$reason" ]] && ! host_allowed "$final_host" "$allowed_host" "$allow_subdomains"; then reason="redirect_escaped_allowlist"; fi
 
   if [[ -n "$reason" ]]; then
     echo "LIVE_FAIL label=$label reason=$reason status=$code bytes=$bytes content_type=${content_type:-missing} final_host=${final_host:-missing}" >&2
@@ -117,7 +127,10 @@ for f in data.get("files",[]):
     echo "LIVE_FAIL label=archive-provider reason=no_licensed_mp4_source" >&2
     failures=$((failures + 1))
   else
-    verify_media_url "$archive_url" "archive.org" "archive-provider"
+    # archive.org legitimately redirects media bytes to hosts such as
+    # ia600702.us.archive.org. Accept only archive.org itself or a true DNS
+    # subdomain ending in .archive.org; lookalikes such as evilarchive.org fail.
+    verify_media_url "$archive_url" "archive.org" "archive-provider" true
   fi
 fi
 
