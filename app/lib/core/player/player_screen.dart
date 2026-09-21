@@ -27,6 +27,8 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   Future<void>? _initialize;
   String? _error;
   bool _resumeAfterInterruption = false;
+  bool _disposed = false;
+  int _generation = 0;
 
   @override
   void initState() {
@@ -57,21 +59,35 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   }
 
   Future<void> _openSource(StreamSource source) async {
-    final previous = _controller;
+    final generation = ++_generation;
 
     await runWithBoundedRetry<void>(
       attempts: 2,
       retryDelay: const Duration(milliseconds: 300),
       operation: (attempt) async {
         final controller = VideoPlayerController.networkUrl(source.uri);
+        var controllerDisposed = false;
         try {
           await controller.initialize().timeout(_initializeTimeout);
+          if (_disposed || generation != _generation) {
+            await controller.dispose();
+            controllerDisposed = true;
+            throw StateError('Playback initialization superseded');
+          }
           await controller.play().timeout(_playTimeout);
+          if (_disposed || generation != _generation) {
+            await controller.dispose();
+            controllerDisposed = true;
+            throw StateError('Playback start superseded');
+          }
         } catch (_) {
-          await controller.dispose();
+          if (!controllerDisposed && !identical(_controller, controller)) {
+            await controller.dispose();
+          }
           rethrow;
         }
 
+        final previous = _controller;
         _controller = controller;
         if (previous != null && !identical(previous, controller)) {
           await previous.dispose();
@@ -86,8 +102,11 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   }
 
   Future<void> _retry() async {
-    await _controller?.dispose();
+    _generation++;
+    final previous = _controller;
     _controller = null;
+    await previous?.dispose();
+    if (!mounted) return;
     setState(() {
       _error = null;
       _initialize = _initializePlayer();
@@ -100,28 +119,32 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     if (controller == null || !controller.value.isInitialized) return;
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
       _resumeAfterInterruption = controller.value.isPlaying;
-      controller.pause();
+      unawaited(controller.pause());
     } else if (state == AppLifecycleState.resumed && _resumeAfterInterruption) {
       _resumeAfterInterruption = false;
-      controller.play();
+      unawaited(controller.play());
     }
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _generation++;
     WidgetsBinding.instance.removeObserver(this);
-    _controller?.dispose();
+    final controller = _controller;
+    _controller = null;
+    if (controller != null) unawaited(controller.dispose());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = _controller;
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) _stopPlayback();
+        if (didPop) unawaited(_stopPlayback());
       },
       child: Scaffold(
         appBar: AppBar(title: Text(widget.title)),
@@ -154,9 +177,10 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                 : FutureBuilder<void>(
                     future: _initialize,
                     builder: (context, snapshot) {
+                      final activeController = _controller;
                       if (snapshot.connectionState != ConnectionState.done ||
-                          controller == null ||
-                          !controller.value.isInitialized) {
+                          activeController == null ||
+                          !activeController.value.isInitialized) {
                         return Semantics(
                           label: 'Loading player',
                           liveRegion: true,
@@ -167,10 +191,10 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           AspectRatio(
-                            aspectRatio: controller.value.aspectRatio == 0
+                            aspectRatio: activeController.value.aspectRatio == 0
                                 ? 16 / 9
-                                : controller.value.aspectRatio,
-                            child: VideoPlayer(controller),
+                                : activeController.value.aspectRatio,
+                            child: VideoPlayer(activeController),
                           ),
                           const SizedBox(height: 16),
                           Row(
@@ -178,17 +202,17 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                             children: [
                               IconButton(
                                 key: const Key('player-play-pause'),
-                                tooltip: controller.value.isPlaying ? 'Pause' : 'Play',
+                                tooltip: activeController.value.isPlaying ? 'Pause' : 'Play',
                                 onPressed: () async {
-                                  if (controller.value.isPlaying) {
-                                    await controller.pause();
+                                  if (activeController.value.isPlaying) {
+                                    await activeController.pause();
                                   } else {
-                                    await controller.play();
+                                    await activeController.play();
                                   }
                                   if (mounted) setState(() {});
                                 },
                                 icon: Icon(
-                                  controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                                  activeController.value.isPlaying ? Icons.pause : Icons.play_arrow,
                                 ),
                               ),
                               const SizedBox(width: 12),
