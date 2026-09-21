@@ -66,19 +66,24 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
       retryDelay: const Duration(milliseconds: 300),
       operation: (attempt) async {
         final controller = VideoPlayerController.networkUrl(source.uri);
+        var controllerDisposed = false;
         try {
           await controller.initialize().timeout(_initializeTimeout);
           if (_disposed || generation != _generation) {
             await controller.dispose();
+            controllerDisposed = true;
             throw StateError('Playback initialization superseded');
           }
           await controller.play().timeout(_playTimeout);
           if (_disposed || generation != _generation) {
             await controller.dispose();
+            controllerDisposed = true;
             throw StateError('Playback start superseded');
           }
         } catch (_) {
-          if (!identical(_controller, controller)) await controller.dispose();
+          if (!controllerDisposed && !identical(_controller, controller)) {
+            await controller.dispose();
+          }
           rethrow;
         }
 
@@ -137,7 +142,6 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
-    final controller = _controller;
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) unawaited(_stopPlayback());
