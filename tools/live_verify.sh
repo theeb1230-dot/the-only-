@@ -2,27 +2,29 @@
 set -euo pipefail
 
 # LIVE verification is intentionally separate from deterministic CI. It checks
-# only public, authorization-safe sample media that the runtime demo providers
-# expose. Never add scraped, credentialed, DRM, paywalled, or ambiguous URLs.
-urls=(
-  "https://mdn.github.io/shared-assets/videos/flower.mp4"
-)
+# only public, authorization-safe sample media and the open-license provider
+# discovery path used by production. Never add scraped, credentialed, DRM,
+# paywalled, or ambiguous URLs.
 
 failures=0
 passes=0
 
-for url in "${urls[@]}"; do
+verify_media_url() {
+  local url="$1"
+  local allowed_host="$2"
+  local label="$3"
+  local host headers body result code final_url final_host bytes content_type reason
+
   host="$(python3 -c 'import sys,urllib.parse; print(urllib.parse.urlsplit(sys.argv[1]).hostname or "")' "$url")"
-  if [[ "$host" != "mdn.github.io" ]]; then
-    echo "LIVE_FAIL reason=unapproved_host host=${host:-missing}" >&2
+  if [[ "$host" != "$allowed_host" ]]; then
+    echo "LIVE_FAIL label=$label reason=unapproved_host host=${host:-missing}" >&2
     failures=$((failures + 1))
-    continue
+    return
   fi
 
-  echo "LIVE_VERIFY host=$host"
+  echo "LIVE_VERIFY label=$label host=$host"
   headers="$(mktemp)"
   body="$(mktemp)"
-  trap 'rm -f "$headers" "$body"' EXIT
 
   if ! result="$(curl --silent --show-error --location --max-redirs 3 \
     --connect-timeout 10 --max-time 30 \
@@ -32,11 +34,10 @@ for url in "${urls[@]}"; do
     --output "$body" \
     --write-out '%{http_code} %{url_effective}' \
     "$url")"; then
-    echo "LIVE_FAIL reason=request_failed host=$host" >&2
+    echo "LIVE_FAIL label=$label reason=request_failed host=$host" >&2
     failures=$((failures + 1))
     rm -f "$headers" "$body"
-    trap - EXIT
-    continue
+    return
   fi
 
   code="${result%% *}"
@@ -52,21 +53,75 @@ for url in "${urls[@]}"; do
   esac
   if [[ -z "$reason" && "$bytes" -le 0 ]]; then reason="empty_body"; fi
   if [[ -z "$reason" && ( -z "$content_type" || "$content_type" != video/* ) ]]; then reason="unexpected_content_type"; fi
-  if [[ -z "$reason" && "$final_host" != "mdn.github.io" ]]; then reason="redirect_escaped_allowlist"; fi
+  if [[ -z "$reason" && "$final_host" != "$allowed_host" ]]; then reason="redirect_escaped_allowlist"; fi
 
   if [[ -n "$reason" ]]; then
-    echo "LIVE_FAIL reason=$reason status=$code bytes=$bytes content_type=${content_type:-missing} final_host=${final_host:-missing}" >&2
+    echo "LIVE_FAIL label=$label reason=$reason status=$code bytes=$bytes content_type=${content_type:-missing} final_host=${final_host:-missing}" >&2
     failures=$((failures + 1))
   else
-    echo "LIVE_PASS status=$code bytes=$bytes content_type=$content_type final_host=$final_host"
+    echo "LIVE_PASS label=$label status=$code bytes=$bytes content_type=$content_type final_host=$final_host"
     passes=$((passes + 1))
   fi
-
   rm -f "$headers" "$body"
-  trap - EXIT
-done
+}
+
+# Stable authorized public sample used by the built-in demo provider.
+verify_media_url "https://mdn.github.io/shared-assets/videos/flower.mp4" "mdn.github.io" "demo-mp4"
+
+# Exercise the production Internet Archive provider contract end-to-end:
+# search only records with an explicit CC license, fetch metadata, re-check the
+# license, select a direct MP4, then verify bytes without downloading the file.
+search_json="$(curl --silent --show-error --fail --location --max-redirs 2 \
+  --connect-timeout 10 --max-time 30 \
+  --proto '=https' --proto-redir '=https' \
+  --get 'https://archive.org/advancedsearch.php' \
+  --data-urlencode 'q=(animation) AND mediatype:movies AND licenseurl:*' \
+  --data-urlencode 'fl[]=identifier,title,licenseurl' \
+  --data-urlencode 'rows=20' --data-urlencode 'page=1' --data-urlencode 'output=json')" || search_json=''
+
+candidate="$(python3 -c '
+import json,sys
+try: data=json.load(sys.stdin)
+except Exception: raise SystemExit(0)
+for doc in data.get("response",{}).get("docs",[]):
+    lic=doc.get("licenseurl","")
+    if isinstance(lic,list): lic=lic[0] if lic else ""
+    if isinstance(lic,str) and lic.lower().startswith(("https://creativecommons.org/","http://creativecommons.org/")):
+        ident=doc.get("identifier","")
+        if isinstance(ident,str) and ident: print(ident); break
+' <<<"$search_json")"
+
+if [[ -z "$candidate" ]]; then
+  echo "LIVE_FAIL label=archive-provider reason=no_open_license_search_result" >&2
+  failures=$((failures + 1))
+else
+  metadata="$(curl --silent --show-error --fail --location --max-redirs 2 \
+    --connect-timeout 10 --max-time 30 --proto '=https' --proto-redir '=https' \
+    "https://archive.org/metadata/${candidate}")" || metadata=''
+  archive_url="$(python3 -c '
+import json,sys,urllib.parse
+try: data=json.load(sys.stdin)
+except Exception: raise SystemExit(0)
+lic=data.get("metadata",{}).get("licenseurl","")
+if isinstance(lic,list): lic=lic[0] if lic else ""
+if not isinstance(lic,str) or not lic.lower().startswith(("https://creativecommons.org/","http://creativecommons.org/")): raise SystemExit(0)
+ident=data.get("metadata",{}).get("identifier","") or sys.argv[1]
+for f in data.get("files",[]):
+    name=f.get("name","")
+    fmt=str(f.get("format","")).lower()
+    if isinstance(name,str) and name.lower().endswith(".mp4") and (not fmt or "mpeg4" in fmt or "h.264" in fmt):
+        print("https://archive.org/download/%s/%s" % (urllib.parse.quote(str(ident),safe=""), urllib.parse.quote(name,safe="/")))
+        break
+' "$candidate" <<<"$metadata")"
+  if [[ -z "$archive_url" ]]; then
+    echo "LIVE_FAIL label=archive-provider reason=no_licensed_mp4_source" >&2
+    failures=$((failures + 1))
+  else
+    verify_media_url "$archive_url" "archive.org" "archive-provider"
+  fi
+fi
 
 echo "LIVE_SUMMARY passes=$passes failures=$failures"
-if [[ "$failures" -ne 0 || "$passes" -eq 0 ]]; then
+if [[ "$failures" -ne 0 || "$passes" -lt 2 ]]; then
   exit 1
 fi
