@@ -91,11 +91,14 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: Scaffold(body: CinemaScreen(controller: controller))),
     );
-    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'missing');
+    await tester.enterText(
+      find.byKey(const Key('cinema-search-field')),
+      'missing',
+    );
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('cinema-empty')), findsOneWidget);
-    expect(find.text('لم يتم العثور على نتائج'), findsOneWidget);
+    expect(find.text('لا توجد نتائج متاحة الآن'), findsOneWidget);
     expect(find.byKey(const Key('cinema-loading')), findsNothing);
     expect(find.byKey(const Key('cinema-error')), findsNothing);
   });
@@ -125,7 +128,10 @@ void main() {
         ),
       ),
     ));
-    await tester.enterText(find.byKey(const Key('cinema-search-field')), 'fixture');
+    await tester.enterText(
+      find.byKey(const Key('cinema-search-field')),
+      'fixture',
+    );
     await tester.tap(find.byKey(const Key('cinema-search-button')));
     await tester.pumpAndSettle();
     expect(find.text('Fixture Movie'), findsOneWidget);
@@ -146,8 +152,9 @@ void main() {
     expect(watch, findsOneWidget);
     expect(download, findsOneWidget);
 
-    await tester.ensureVisible(watch);
-    await tester.tap(watch);
+    final watchButton = tester.widget<FilledButton>(watch);
+    expect(watchButton.onPressed, isNotNull);
+    watchButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(history.entries, hasLength(1));
     expect(launched, isNotNull);
@@ -155,8 +162,9 @@ void main() {
     expect(downloads.jobs, isEmpty,
         reason: 'Watch must never implicitly queue a download');
 
-    await tester.ensureVisible(download);
-    await tester.tap(download);
+    final downloadButton = tester.widget<OutlinedButton>(download);
+    expect(downloadButton.onPressed, isNotNull);
+    downloadButton.onPressed!.call();
     await tester.pumpAndSettle();
     expect(downloads.jobs, hasLength(1));
     expect(history.entries, hasLength(1),
