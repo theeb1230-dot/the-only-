@@ -58,6 +58,23 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     }
   }
 
+  void _onControllerChanged() {
+    final controller = _controller;
+    if (_disposed || !mounted || controller == null) return;
+    final value = controller.value;
+    if (value.hasError && _error == null) {
+      setState(() => _error = 'Playback stopped because the native player reported an error. Try another source.');
+      return;
+    }
+    setState(() {});
+  }
+
+  Future<void> _disposeController(VideoPlayerController? controller) async {
+    if (controller == null) return;
+    controller.removeListener(_onControllerChanged);
+    await controller.dispose();
+  }
+
   Future<void> _openSource(StreamSource source) async {
     final generation = ++_generation;
 
@@ -88,7 +105,9 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
         }
 
         final previous = _controller;
+        if (previous != null) previous.removeListener(_onControllerChanged);
         _controller = controller;
+        controller.addListener(_onControllerChanged);
         if (previous != null && !identical(previous, controller)) {
           await previous.dispose();
         }
@@ -105,7 +124,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     _generation++;
     final previous = _controller;
     _controller = null;
-    await previous?.dispose();
+    await _disposeController(previous);
     if (!mounted) return;
     setState(() {
       _error = null;
@@ -136,7 +155,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     WidgetsBinding.instance.removeObserver(this);
     final controller = _controller;
     _controller = null;
-    if (controller != null) unawaited(controller.dispose());
+    if (controller != null) unawaited(_disposeController(controller));
     super.dispose();
   }
 
@@ -194,7 +213,14 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                             aspectRatio: activeController.value.aspectRatio == 0
                                 ? 16 / 9
                                 : activeController.value.aspectRatio,
-                            child: VideoPlayer(activeController),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                VideoPlayer(activeController),
+                                if (activeController.value.isBuffering)
+                                  const CircularProgressIndicator(key: Key('player-buffering')),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Row(
@@ -209,7 +235,6 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                                   } else {
                                     await activeController.play();
                                   }
-                                  if (mounted) setState(() {});
                                 },
                                 icon: Icon(
                                   activeController.value.isPlaying ? Icons.pause : Icons.play_arrow,
