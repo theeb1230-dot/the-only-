@@ -27,6 +27,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   Future<void>? _initialize;
   String? _error;
   bool _resumeAfterInterruption = false;
+  bool _lifecycleInterrupted = false;
   bool _disposed = false;
   bool? _lastIsPlaying;
   bool? _lastIsBuffering;
@@ -149,6 +150,8 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     _controller = null;
     _lastIsPlaying = null;
     _lastIsBuffering = null;
+    _lifecycleInterrupted = false;
+    _resumeAfterInterruption = false;
     await _disposeController(previous);
     if (!mounted) return;
     setState(() {
@@ -165,11 +168,19 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.hidden) {
-      _resumeAfterInterruption = controller.value.isPlaying;
+      // A normal background transition can report inactive -> hidden/paused.
+      // Capture the user's play intent only on the first interruption; later
+      // states observe the pause we triggered and must not overwrite it.
+      if (!_lifecycleInterrupted) {
+        _lifecycleInterrupted = true;
+        _resumeAfterInterruption = controller.value.isPlaying;
+      }
       unawaited(controller.pause());
-    } else if (state == AppLifecycleState.resumed && _resumeAfterInterruption) {
+    } else if (state == AppLifecycleState.resumed && _lifecycleInterrupted) {
+      final shouldResume = _resumeAfterInterruption;
+      _lifecycleInterrupted = false;
       _resumeAfterInterruption = false;
-      unawaited(controller.play());
+      if (shouldResume) unawaited(controller.play());
     }
   }
 
