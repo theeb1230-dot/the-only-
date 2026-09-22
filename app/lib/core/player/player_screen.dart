@@ -69,10 +69,6 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
       setState(() => _error = 'Playback stopped because the native player reported an error. Try another source.');
       return;
     }
-
-    // VideoPlayerController can notify on every position update. Rebuilding the
-    // whole player for those ticks is wasteful, especially on Android TV. The
-    // visible controls only depend on playing/buffering transitions.
     if (_lastIsPlaying == value.isPlaying && _lastIsBuffering == value.isBuffering) return;
     _lastIsPlaying = value.isPlaying;
     _lastIsBuffering = value.isBuffering;
@@ -98,7 +94,6 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
 
   Future<void> _openSource(StreamSource source) async {
     final generation = ++_generation;
-
     await runWithBoundedRetry<void>(
       attempts: 2,
       retryDelay: const Duration(milliseconds: 300),
@@ -128,16 +123,13 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
           }
           rethrow;
         }
-
         final previous = _controller;
         if (previous != null) previous.removeListener(_onControllerChanged);
         _controller = controller;
         _lastIsPlaying = controller.value.isPlaying;
         _lastIsBuffering = controller.value.isBuffering;
         controller.addListener(_onControllerChanged);
-        if (previous != null && !identical(previous, controller)) {
-          await previous.dispose();
-        }
+        if (previous != null && !identical(previous, controller)) await previous.dispose();
       },
     );
   }
@@ -163,6 +155,27 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     });
   }
 
+  Future<void> _pauseForLifecycle(VideoPlayerController controller) async {
+    try {
+      await controller.pause();
+    } catch (_) {
+      // A pause can race disposal while the route is leaving. There is no
+      // useful recovery action in the background, so avoid an unhandled async
+      // exception and let dispose own final cleanup.
+    }
+  }
+
+  Future<void> _resumeFromLifecycle(VideoPlayerController controller) async {
+    try {
+      await controller.play().timeout(_playTimeout);
+    } catch (_) {
+      if (_disposed || !mounted || !identical(_controller, controller)) return;
+      setState(() {
+        _error = 'Playback could not resume after returning to the app. Retry this source.';
+      });
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final controller = _controller;
@@ -171,19 +184,16 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.hidden) {
-      // A normal background transition can report inactive -> hidden/paused.
-      // Capture the user's play intent only on the first interruption; later
-      // states observe the pause we triggered and must not overwrite it.
       if (!_lifecycleInterrupted) {
         _lifecycleInterrupted = true;
         _resumeAfterInterruption = controller.value.isPlaying;
       }
-      unawaited(controller.pause());
+      unawaited(_pauseForLifecycle(controller));
     } else if (state == AppLifecycleState.resumed && _lifecycleInterrupted) {
       final shouldResume = _resumeAfterInterruption;
       _lifecycleInterrupted = false;
       _resumeAfterInterruption = false;
-      if (shouldResume) unawaited(controller.play());
+      if (shouldResume) unawaited(_resumeFromLifecycle(controller));
     }
   }
 
@@ -216,11 +226,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                       children: [
                         Semantics(
                           liveRegion: true,
-                          child: Text(
-                            _error!,
-                            key: const Key('player-error'),
-                            textAlign: TextAlign.center,
-                          ),
+                          child: Text(_error!, key: const Key('player-error'), textAlign: TextAlign.center),
                         ),
                         const SizedBox(height: 16),
                         FilledButton.icon(
@@ -249,9 +255,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           AspectRatio(
-                            aspectRatio: activeController.value.aspectRatio == 0
-                                ? 16 / 9
-                                : activeController.value.aspectRatio,
+                            aspectRatio: activeController.value.aspectRatio == 0 ? 16 / 9 : activeController.value.aspectRatio,
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
@@ -275,9 +279,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                                     await activeController.play();
                                   }
                                 },
-                                icon: Icon(
-                                  activeController.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                                ),
+                                icon: Icon(activeController.value.isPlaying ? Icons.pause : Icons.play_arrow),
                               ),
                               const SizedBox(width: 12),
                               Semantics(
