@@ -38,6 +38,44 @@ void main() {
     await tester.pump();
     expect(first.node.hasFocus, isTrue);
   });
+
+  testWidgets('D-pad horizontal traversal follows LTR directionality',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: TvFocusScope(
+            child: Row(
+              children: const [
+                _FocusableButton(key: Key('ltr-first'), label: 'ltr-first'),
+                _FocusableButton(key: Key('ltr-second'), label: 'ltr-second'),
+                _FocusableButton(key: Key('ltr-third'), label: 'ltr-third'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final first = tester.widget<_FocusableButton>(
+      find.byKey(const Key('ltr-first')),
+    );
+    final second = tester.widget<_FocusableButton>(
+      find.byKey(const Key('ltr-second')),
+    );
+    first.node.requestFocus();
+    await tester.pump();
+    expect(first.node.hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    expect(second.node.hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(first.node.hasFocus, isTrue);
+  });
 }
 
 class _FocusableButton extends StatelessWidget {
