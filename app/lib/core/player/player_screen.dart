@@ -75,6 +75,15 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     await controller.dispose();
   }
 
+  VideoFormat _formatHintFor(StreamProtocol protocol) {
+    return switch (protocol) {
+      StreamProtocol.hls => VideoFormat.hls,
+      StreamProtocol.dash => VideoFormat.dash,
+      StreamProtocol.mp4 => VideoFormat.other,
+      _ => VideoFormat.other,
+    };
+  }
+
   Future<void> _openSource(StreamSource source) async {
     final generation = ++_generation;
 
@@ -82,7 +91,10 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
       attempts: 2,
       retryDelay: const Duration(milliseconds: 300),
       operation: (attempt) async {
-        final controller = VideoPlayerController.networkUrl(source.uri);
+        final controller = VideoPlayerController.networkUrl(
+          source.uri,
+          formatHint: _formatHintFor(source.protocol),
+        );
         var controllerDisposed = false;
         try {
           await controller.initialize().timeout(_initializeTimeout);
