@@ -94,12 +94,15 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     };
   }
 
+  bool _isTransientPlaybackFailure(Object error) => error is TimeoutException;
+
   Future<void> _openSource(StreamSource source) async {
     final generation = ++_generation;
 
     await runWithBoundedRetry<void>(
       attempts: 2,
       retryDelay: const Duration(milliseconds: 300),
+      shouldRetry: _isTransientPlaybackFailure,
       operation: (attempt) async {
         final controller = VideoPlayerController.networkUrl(
           source.uri,
