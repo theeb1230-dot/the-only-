@@ -176,6 +176,21 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     }
   }
 
+  Future<void> _togglePlayback(VideoPlayerController controller) async {
+    try {
+      if (controller.value.isPlaying) {
+        await controller.pause().timeout(_playTimeout);
+      } else {
+        await controller.play().timeout(_playTimeout);
+      }
+    } catch (_) {
+      if (_disposed || !mounted || !identical(_controller, controller)) return;
+      setState(() {
+        _error = 'Playback controls failed. Retry this source.';
+      });
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final controller = _controller;
@@ -272,13 +287,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                               IconButton(
                                 key: const Key('player-play-pause'),
                                 tooltip: activeController.value.isPlaying ? 'Pause' : 'Play',
-                                onPressed: () async {
-                                  if (activeController.value.isPlaying) {
-                                    await activeController.pause();
-                                  } else {
-                                    await activeController.play();
-                                  }
-                                },
+                                onPressed: () => _togglePlayback(activeController),
                                 icon: Icon(activeController.value.isPlaying ? Icons.pause : Icons.play_arrow),
                               ),
                               const SizedBox(width: 12),
