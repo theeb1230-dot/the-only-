@@ -12,12 +12,15 @@ class TvFocusScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     return Shortcuts(
-      shortcuts: const <ShortcutActivator, Intent>{
-        SingleActivator(LogicalKeyboardKey.arrowRight): PreviousFocusIntent(),
-        SingleActivator(LogicalKeyboardKey.arrowLeft): NextFocusIntent(),
-        SingleActivator(LogicalKeyboardKey.arrowDown): NextFocusIntent(),
-        SingleActivator(LogicalKeyboardKey.arrowUp): PreviousFocusIntent(),
+      shortcuts: <ShortcutActivator, Intent>{
+        const SingleActivator(LogicalKeyboardKey.arrowRight):
+            isRtl ? const PreviousFocusIntent() : const NextFocusIntent(),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft):
+            isRtl ? const NextFocusIntent() : const PreviousFocusIntent(),
+        const SingleActivator(LogicalKeyboardKey.arrowDown): const NextFocusIntent(),
+        const SingleActivator(LogicalKeyboardKey.arrowUp): const PreviousFocusIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
