@@ -76,6 +76,34 @@ void main() {
     await tester.pump();
     expect(first.node.hasFocus, isTrue);
   });
+
+  testWidgets('TV select key activates the currently focused control',
+      (tester) async {
+    var activations = 0;
+    final node = FocusNode();
+    addTearDown(node.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TvFocusScope(
+          child: TextButton(
+            key: const Key('select-target'),
+            focusNode: node,
+            onPressed: () => activations++,
+            child: const Text('select target'),
+          ),
+        ),
+      ),
+    );
+
+    node.requestFocus();
+    await tester.pump();
+    expect(node.hasFocus, isTrue);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.select);
+    await tester.pump();
+    expect(activations, 1);
+  });
 }
 
 class _FocusableButton extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Maps TV remote directional keys onto Flutter's focus traversal system.
+/// Maps TV remote directional/select keys onto Flutter's focus/action system.
 ///
 /// This stays platform-agnostic so the same shell works with Android TV
 /// remotes, keyboards used for TV testing, and accessibility switch devices.
@@ -21,6 +21,9 @@ class TvFocusScope extends StatelessWidget {
             isRtl ? const NextFocusIntent() : const PreviousFocusIntent(),
         const SingleActivator(LogicalKeyboardKey.arrowDown): const NextFocusIntent(),
         const SingleActivator(LogicalKeyboardKey.arrowUp): const PreviousFocusIntent(),
+        const SingleActivator(LogicalKeyboardKey.select): const ActivateIntent(),
+        const SingleActivator(LogicalKeyboardKey.enter): const ActivateIntent(),
+        const SingleActivator(LogicalKeyboardKey.space): const ActivateIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
