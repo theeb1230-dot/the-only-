@@ -20,12 +20,15 @@ final class DownloadTransferService {
     required this.repository,
     UrlPolicy urlPolicy = const UrlPolicy(),
     DownloadDirectoryProvider? directoryProvider,
+    Duration responseIdleTimeout = const Duration(seconds: 30),
   }) : _urlPolicy = urlPolicy,
-       _directoryProvider = directoryProvider ?? _defaultDirectory;
+       _directoryProvider = directoryProvider ?? _defaultDirectory,
+       _responseIdleTimeout = responseIdleTimeout;
 
   final DownloadsRepository repository;
   final UrlPolicy _urlPolicy;
   final DownloadDirectoryProvider _directoryProvider;
+  final Duration _responseIdleTimeout;
   final Map<String, HttpClient> _clients = {};
   final Set<String> _cancelled = {};
 
@@ -97,11 +100,11 @@ final class DownloadTransferService {
         if (!_urlPolicy.allowsRedirect(uri, next)) {
           throw StateError('Download redirect was rejected by security policy');
         }
-        await response.drain<void>();
+        await response.drain<void>().timeout(_responseIdleTimeout);
         uri = next;
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        await response.drain<void>();
+        await response.drain<void>().timeout(_responseIdleTimeout);
         throw HttpException('Download failed with HTTP ${response.statusCode}');
       }
 
@@ -110,7 +113,7 @@ final class DownloadTransferService {
       var lastPersisted = -1;
       final sink = file.openWrite(mode: FileMode.writeOnly);
       try {
-        await for (final chunk in response) {
+        await for (final chunk in response.timeout(_responseIdleTimeout)) {
           if (_cancelled.contains(job.id)) throw const _DownloadCancelled();
           sink.add(chunk);
           received += chunk.length;
