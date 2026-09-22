@@ -92,7 +92,9 @@ void main() {
     await requestReceived.future;
     final result = await resultFuture;
     releaseServer.complete();
-    await serving;
+    // The client deliberately aborts the socket after the idle timeout. The
+    // server may therefore observe an expected peer-disconnect while closing.
+    await serving.then<void>((_) {}, onError: (_) {});
 
     expect(result.state, DownloadState.failed);
     expect(result.progress, 0);
