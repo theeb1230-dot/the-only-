@@ -28,6 +28,8 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   String? _error;
   bool _resumeAfterInterruption = false;
   bool _disposed = false;
+  bool? _lastIsPlaying;
+  bool? _lastIsBuffering;
   int _generation = 0;
 
   @override
@@ -66,6 +68,13 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
       setState(() => _error = 'Playback stopped because the native player reported an error. Try another source.');
       return;
     }
+
+    // VideoPlayerController can notify on every position update. Rebuilding the
+    // whole player for those ticks is wasteful, especially on Android TV. The
+    // visible controls only depend on playing/buffering transitions.
+    if (_lastIsPlaying == value.isPlaying && _lastIsBuffering == value.isBuffering) return;
+    _lastIsPlaying = value.isPlaying;
+    _lastIsBuffering = value.isBuffering;
     setState(() {});
   }
 
@@ -119,6 +128,8 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
         final previous = _controller;
         if (previous != null) previous.removeListener(_onControllerChanged);
         _controller = controller;
+        _lastIsPlaying = controller.value.isPlaying;
+        _lastIsBuffering = controller.value.isBuffering;
         controller.addListener(_onControllerChanged);
         if (previous != null && !identical(previous, controller)) {
           await previous.dispose();
@@ -136,6 +147,8 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     _generation++;
     final previous = _controller;
     _controller = null;
+    _lastIsPlaying = null;
+    _lastIsBuffering = null;
     await _disposeController(previous);
     if (!mounted) return;
     setState(() {
