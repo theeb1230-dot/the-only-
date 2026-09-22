@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -63,6 +64,43 @@ void main() {
     expect(persisted.state, DownloadState.completed);
     expect(persisted.localPath, result.localPath);
     expect(persisted.progress, 1);
+  });
+
+  test('stalled response body times out and cleans partial media', () async {
+    final repo = await repository();
+    final service = DownloadTransferService(
+      repository: repo,
+      urlPolicy: const UrlPolicy(allowHttpForLocalhost: true),
+      directoryProvider: () async => directory,
+      responseIdleTimeout: const Duration(milliseconds: 100),
+    );
+    final job = DownloadJob(id: 'stalled-transfer', source: source('/stall.mp4'), state: DownloadState.queued);
+    await repo.enqueue(job);
+
+    final requestReceived = Completer<void>();
+    final releaseServer = Completer<void>();
+    final serving = server.first.then((request) async {
+      request.response.headers.contentLength = 6;
+      request.response.add([1, 2, 3]);
+      await request.response.flush();
+      requestReceived.complete();
+      await releaseServer.future;
+      await request.response.close();
+    });
+
+    final resultFuture = service.start(job);
+    await requestReceived.future;
+    final result = await resultFuture;
+    releaseServer.complete();
+    // The client deliberately aborts the socket after the idle timeout. The
+    // server may therefore observe an expected peer-disconnect while closing.
+    await serving.then<void>((_) {}, onError: (_) {});
+
+    expect(result.state, DownloadState.failed);
+    expect(result.progress, 0);
+    expect(result.localPath, isNull);
+    expect(result.error, contains('Retry'));
+    expect(await directory.list().toList(), isEmpty);
   });
 
   test('startup recovery pauses interrupted jobs and detects missing completed files', () async {
