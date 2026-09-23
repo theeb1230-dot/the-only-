@@ -79,6 +79,7 @@ final class DownloadTransferService {
     var current = job.copyWith(state: DownloadState.running, progress: 0, clearError: true);
     await repository.update(current);
     final directory = await _directoryProvider();
+    if (_cancelled.contains(job.id)) return await _cancelledJob(current);
     if (!await directory.exists()) await directory.create(recursive: true);
     final file = File('${directory.path}${Platform.pathSeparator}${_safeName(job)}.part');
     final finalFile = File('${directory.path}${Platform.pathSeparator}${_safeName(job)}.mp4');
@@ -89,9 +90,11 @@ final class DownloadTransferService {
       var uri = job.source.uri;
       HttpClientResponse response;
       for (var redirects = 0; ; redirects++) {
+        if (_cancelled.contains(job.id)) return await _cancelledJob(current);
         final request = await client.getUrl(uri).timeout(const Duration(seconds: 12));
         request.followRedirects = false;
         response = await request.close().timeout(const Duration(seconds: 20));
+        if (_cancelled.contains(job.id)) return await _cancelledJob(current);
         if (!response.isRedirect) break;
         if (redirects >= 4) throw StateError('Too many download redirects');
         final location = response.headers.value(HttpHeaders.locationHeader);
@@ -142,16 +145,10 @@ final class DownloadTransferService {
       return current;
     } on _DownloadCancelled {
       if (await file.exists()) await file.delete();
-      current = current.copyWith(state: DownloadState.cancelled, progress: 0, error: 'Download cancelled.');
-      await repository.update(current);
-      return current;
+      return await _cancelledJob(current);
     } catch (_) {
       if (await file.exists()) await file.delete();
-      if (_cancelled.contains(job.id)) {
-        current = current.copyWith(state: DownloadState.cancelled, progress: 0, error: 'Download cancelled.');
-        await repository.update(current);
-        return current;
-      }
+      if (_cancelled.contains(job.id)) return await _cancelledJob(current);
       current = current.copyWith(state: DownloadState.failed, progress: 0, error: 'Download failed. Retry when the connection is available.');
       await repository.update(current);
       return current;
@@ -165,6 +162,16 @@ final class DownloadTransferService {
   void cancel(String id) {
     _cancelled.add(id);
     _clients[id]?.close(force: true);
+  }
+
+  Future<DownloadJob> _cancelledJob(DownloadJob current) async {
+    final cancelled = current.copyWith(
+      state: DownloadState.cancelled,
+      progress: 0,
+      error: 'Download cancelled.',
+    );
+    await repository.update(cancelled);
+    return cancelled;
   }
 
   String _safeName(DownloadJob job) {
